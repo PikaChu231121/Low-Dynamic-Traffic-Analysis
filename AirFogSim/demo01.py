@@ -28,8 +28,8 @@ config_path = os.path.join(os.path.dirname(__file__), 'config.yaml')
 config = load_config(config_path)
 
 # 修改配置，确保有足够的车辆和无人机
-config['simulation']['vehicle_count'] = 50  # 至少50辆车
-config['traffic']['max_n_UAVs'] = 50            # 至少10架无人机
+config['simulation']['vehicle_count'] = 60  # 至少50辆车
+config['traffic']['max_n_UAVs'] = 50        # 至少10架无人机
 
 # 创建环境
 env = AirFogSimEnv(config, interactive_mode='graphic')  # 使用图形界面模式

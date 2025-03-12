@@ -109,76 +109,59 @@ class DataCollector:
         
         # 只打印部分任务状态，避免输出过多
         task_states = {}
-        for task in all_tasks[:5]:  # 只显示前5个任务
-            if hasattr(task, 'getTaskState'):
-                state = task.getTaskState()
-                task_states[state] = task_states.get(state, 0) + 1
+        sample_tasks = all_tasks[:5] if len(all_tasks) >= 5 else all_tasks  # 只显示前5个任务
+        for task in sample_tasks:
+            state = "unknown"
+            if task.isComputed():
+                state = "computed"
+            elif task.isComputing():
+                state = "computing"
+            elif task.isTransmitting():
+                state = "transmitting"
+            task_states[task.getTaskId()] = state
         print(f"Sample task states: {task_states}")
         
-        # 直接获取节点信息的替代方法
-        # 对于车辆
-        for vehicle_id, vehicle in env.vehicles.items():
-            try:
-                # 获取车辆计算资源信息
-                if hasattr(vehicle, 'fog_profile') and vehicle.fog_profile:
-                    total_cpu = vehicle.fog_profile.get('cpu', 0)
-                    used_cpu = 0
-                    
-                    # 获取当前正在该节点上执行的任务
-                    computing_tasks = env.task_manager.getComputingTasksByNodeId(vehicle_id)
-                    for task in computing_tasks:
-                        used_cpu += task.getAllocatedCpu()
-                        total_tasks += 1
-                    
-                    # 计算负载比例
-                    if total_cpu > 0:
-                        load_ratio = used_cpu / total_cpu
-                        compute_loads[vehicle_id] = load_ratio
-            except Exception as e:
-                print(f"Error processing vehicle {vehicle_id}: {str(e)}")
+        # 获取所有计算中的任务
+        computing_tasks = env.task_manager.getComputingTasks()
         
-        # 对于无人机
-        for uav_id, uav in env.UAVs.items():
+        # 遍历节点上正在计算的任务
+        for node_id, tasks in computing_tasks.items():
+            # 获取节点信息
+            node_info = None
+            if node_id in env.vehicles:
+                node_info = env.vehicles[node_id]
+            elif node_id in env.UAVs:
+                node_info = env.UAVs[node_id]
+            elif hasattr(env, 'RSUs') and node_id in env.RSUs:
+                node_info = env.RSUs[node_id]
+            
+            if node_info is None:
+                continue
+                
             try:
-                # 获取无人机计算资源信息
-                if hasattr(uav, 'fog_profile') and uav.fog_profile:
-                    total_cpu = uav.fog_profile.get('cpu', 0)
-                    used_cpu = 0
-                    
-                    # 获取当前正在该节点上执行的任务
-                    computing_tasks = env.task_manager.getComputingTasksByNodeId(uav_id)
-                    for task in computing_tasks:
-                        used_cpu += task.getAllocatedCpu()
-                        total_tasks += 1
-                    
-                    # 计算负载比例
-                    if total_cpu > 0:
-                        load_ratio = used_cpu / total_cpu
-                        compute_loads[uav_id] = load_ratio
+                # 获取节点计算资源信息
+                total_cpu = 0
+                if hasattr(node_info, 'fog_profile') and node_info.fog_profile:
+                    total_cpu = node_info.fog_profile.get('cpu', 0)
+                else:
+                    # 尝试直接获取fog_profile
+                    node_attributes = node_info.to_dict() if hasattr(node_info, 'to_dict') else {}
+                    fog_profile = node_attributes.get('fog_profile', {})
+                    total_cpu = fog_profile.get('cpu', 0)
+                
+                if total_cpu <= 0:
+                    continue
+                
+                # 计算已使用的CPU
+                used_cpu = sum([task.getComputedSize() for task in tasks])
+                total_tasks += len(tasks)
+                
+                # 计算负载比例
+                load_ratio = used_cpu / total_cpu
+                compute_loads[node_id] = load_ratio
+                
             except Exception as e:
-                print(f"Error processing UAV {uav_id}: {str(e)}")
-        
-        # 对于RSU
-        if hasattr(env, 'RSUs'):
-            for rsu_id, rsu in env.RSUs.items():
-                try:
-                    # 获取RSU计算资源信息
-                    if hasattr(rsu, 'fog_profile') and rsu.fog_profile:
-                        total_cpu = rsu.fog_profile.get('cpu', 0)
-                        used_cpu = 0
-                        
-                        # 获取当前正在该节点上执行的任务
-                        computing_tasks = env.task_manager.getComputingTasksByNodeId(rsu_id)
-                        for task in computing_tasks:
-                            used_cpu += task.getAllocatedCpu()
-                            total_tasks += 1
-                        
-                        # 计算负载比例
-                        if total_cpu > 0:
-                            load_ratio = used_cpu / total_cpu
-                            compute_loads[rsu_id] = load_ratio
-                except Exception as e:
-                    print(f"Error processing RSU {rsu_id}: {str(e)}")
+                print(f"Error processing node {node_id}: {str(e)}")
         
         # 打印统计信息
         print(f"Total computing tasks found: {total_tasks}")
