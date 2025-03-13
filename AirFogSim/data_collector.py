@@ -14,7 +14,9 @@ class DataCollector:
             'avg_V2U_rate': [],
             'avg_V2I_rate': [],
             'avg_U2I_rate': [],
-            'compute_load_avg': []
+            'compute_load_avg': [],
+            'vehicle_density': [],
+            'uav_density': []
         }
         
         # 可以添加特定区域的数据收集
@@ -61,6 +63,28 @@ class DataCollector:
         load_values = list(compute_loads.values())
         self.data['compute_load_avg'].append(np.mean(load_values) if load_values else 0)
         
+        # 计算交通流密度
+        x_range = env.traffic_manager.getConfig('x_range')
+        y_range = env.traffic_manager.getConfig('y_range')
+        if x_range is not None and y_range is not None:
+            area_width = x_range[1] - x_range[0]
+            area_height = y_range[1] - y_range[0]
+            total_area = area_width * area_height
+            # 防止面积为0的异常情况
+            if total_area <= 0:
+                total_area = 1.0
+        else:
+            total_area = 1.0
+
+        current_vehicle_num = env.traffic_manager.getNumberOfVehicles()
+        current_uav_num = env.traffic_manager.getNumberOfUAVs()
+        
+        # 将密度值转换为每平方公里的数量
+        # 假设坐标系统单位是米，转换为每平方公里
+        conversion_factor = 1000000  # 1平方公里 = 1,000,000平方米
+        self.data['vehicle_density'].append((current_vehicle_num / total_area) * conversion_factor)
+        self.data['uav_density'].append((current_uav_num / total_area) * conversion_factor)
+
         # 收集特定区域数据
         for area_name, area_bounds in self.area_specific_data.items():
             area_key = f'{area_name}_vehicle_count'
@@ -235,16 +259,54 @@ class DataCollector:
         axes[1, 1].set_title('Average Compute Load')
         axes[1, 1].set_xlabel('Time')
         axes[1, 1].set_ylabel('Load Ratio')
+
+        # 绘制交通流密度
+        axes[2, 0].plot(self.data['time'], self.data['vehicle_density'], label='Vehicle Density')
+        axes[2, 0].plot(self.data['time'], self.data['uav_density'], label='UAV Density')
+        axes[2, 0].set_title('Traffic Density')
+        axes[2, 0].set_xlabel('Time')
+        axes[2, 0].set_ylabel('Density')
+        axes[2, 0].legend()
         
-        # 特定区域数量
-        area_metrics = [k for k in self.data.keys() if 'junction' in k]
-        if area_metrics:
-            for i, metric in enumerate(area_metrics[:2]):
-                if i < 2:  # 只显示前两个交叉路口数据
-                    axes[2, i].plot(self.data['time'], self.data[metric])
-                    axes[2, i].set_title(f'{metric} Change')
-                    axes[2, i].set_xlabel('Time')
-                    axes[2, i].set_ylabel('Count')
+        # 检查是否有特定区域数据需要绘制
+        area_metrics = [k for k in self.data.keys() if k.endswith('_vehicle_count') and 'junction' in k]
+        if area_metrics and len(area_metrics) > 0:
+            axes[2, 1].set_title('Area Specific Vehicle Count')
+            axes[2, 1].set_xlabel('Time')
+            axes[2, 1].set_ylabel('Count')
+            
+            for metric in area_metrics[:3]:  # 最多显示3个区域的数据
+                axes[2, 1].plot(self.data['time'], self.data[metric], label=metric.replace('_vehicle_count', ''))
+            
+            axes[2, 1].legend()
+        else:
+            # 如果没有特定区域数据，则显示密度和计数的比较
+            vehicle_density = np.array(self.data['vehicle_density'])
+            vehicle_count = np.array(self.data['vehicle_count'])
+            
+            # 为了使两个指标在同一图中显示得更清楚，进行归一化处理
+            max_density = max(vehicle_density) if len(vehicle_density) > 0 else 1
+            max_count = max(vehicle_count) if len(vehicle_count) > 0 else 1
+            
+            norm_density = vehicle_density / max_density if max_density > 0 else vehicle_density
+            norm_count = vehicle_count / max_count if max_count > 0 else vehicle_count
+            
+            ax1 = axes[2, 1]
+            ax1.set_title('Vehicle Count vs Density')
+            ax1.set_xlabel('Time')
+            ax1.plot(self.data['time'], norm_count, 'b-', label='Vehicle Count (normalized)')
+            ax1.set_ylabel('Vehicle Count (normalized)', color='b')
+            ax1.tick_params('y', colors='b')
+            
+            ax2 = ax1.twinx()
+            ax2.plot(self.data['time'], norm_density, 'r-', label='Vehicle Density (normalized)')
+            ax2.set_ylabel('Vehicle Density (normalized)', color='r')
+            ax2.tick_params('y', colors='r')
+            
+            # 添加图例
+            lines1, labels1 = ax1.get_legend_handles_labels()
+            lines2, labels2 = ax2.get_legend_handles_labels()
+            ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
         
         plt.tight_layout()
         plt.show()
