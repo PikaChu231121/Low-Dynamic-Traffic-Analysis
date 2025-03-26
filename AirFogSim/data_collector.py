@@ -55,8 +55,8 @@ class DataCollector:
             self.data['avg_U2I_rate'].append(0)
         
         # 分析任务分配情况（每10个时间步执行一次，避免输出过多）
-        if int(env.simulation_time * 10) % 100 == 0:
-            self.analyze_task_allocation(env)
+        # if int(env.simulation_time * 10) % 100 == 0:
+        #     self.analyze_task_allocation(env)
         
         # 计算负载指标
         compute_loads = self.calculate_compute_load(env)
@@ -129,7 +129,7 @@ class DataCollector:
         
         # 打印任务信息
         all_tasks = env.task_manager.getAllTasks()
-        print(f"Total tasks in system: {len(all_tasks)}")
+        # print(f"Total tasks in system: {len(all_tasks)}")
         
         # 只打印部分任务状态，避免输出过多
         task_states = {}
@@ -143,7 +143,7 @@ class DataCollector:
             elif task.isTransmitting():
                 state = "transmitting"
             task_states[task.getTaskId()] = state
-        print(f"Sample task states: {task_states}")
+        # print(f"Sample task states: {task_states}")
         
         # 获取所有计算中的任务
         computing_tasks = env.task_manager.getComputingTasks()
@@ -188,12 +188,12 @@ class DataCollector:
                 print(f"Error processing node {node_id}: {str(e)}")
         
         # 打印统计信息
-        print(f"Total computing tasks found: {total_tasks}")
-        print(f"Nodes with compute load: {len(compute_loads)}")
+        # print(f"Total computing tasks found: {total_tasks}")
+        # print(f"Nodes with compute load: {len(compute_loads)}")
         
         if len(compute_loads) > 0:
             avg_load = sum(compute_loads.values()) / len(compute_loads)
-            print(f"Average compute load: {avg_load:.4f}")
+            # print(f"Average compute load: {avg_load:.4f}")
         
         return compute_loads
     
@@ -227,7 +227,7 @@ class DataCollector:
         df = pd.DataFrame(self.data)
         df.to_csv(filename, index=False)
     
-    def plot_metrics(self):
+    def plot_metrics(self, ouput_path=None):
         """绘制指标变化图"""
         fig, axes = plt.subplots(3, 2, figsize=(15, 15))
         
@@ -251,7 +251,7 @@ class DataCollector:
         axes[1, 0].plot(self.data['time'], self.data['avg_U2I_rate'], label='U2I')
         axes[1, 0].set_title('Communication Rates')
         axes[1, 0].set_xlabel('Time')
-        axes[1, 0].set_ylabel('Rate (bps)')
+        axes[1, 0].set_ylabel('Rate (Mbps)')
         axes[1, 0].legend()
         
         # 计算负载
@@ -308,5 +308,10 @@ class DataCollector:
             lines2, labels2 = ax2.get_legend_handles_labels()
             ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
         
-        plt.tight_layout()
-        plt.show()
+        if ouput_path:
+            plt.savefig(ouput_path, dpi=300, bbox_inches='tight')
+            print(f"全局指标可视化结果已保存到: {ouput_path}")
+        else:
+            plt.tight_layout()
+            plt.show()
+

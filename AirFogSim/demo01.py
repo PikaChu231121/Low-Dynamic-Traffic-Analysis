@@ -9,6 +9,7 @@ import torch
 import yaml
 import matplotlib.pyplot as plt
 from data_collector import DataCollector
+from context_extractor import ContextExtractor
 
 # 导入AirFogSim相关模块
 from airfogsim import AirFogSimEnv, BaseAlgorithmModule
@@ -34,6 +35,13 @@ config['traffic']['max_n_UAVs'] = 50        # 至少10架无人机
 # 创建环境
 env = AirFogSimEnv(config, interactive_mode='graphic')  # 使用图形界面模式
 
+# 创建上下文提取器并提取上下文信息
+context_extractor = ContextExtractor(env, config_path)
+context_extractor.extract_traffic_topology()
+context_extractor.extract_nonfly_zones()
+context_extractor.extract_computation_capacity()
+context_extractor.extract_mission_characteristics()
+
 # 创建算法模块
 algorithm_module = BaseAlgorithmModule()
 algorithm_module.initialize(env)
@@ -57,6 +65,9 @@ if junctions:
 
 # 模拟执行
 accumulated_reward = 0
+# 标志变量，跟踪是否已经提取了交通密度数据
+density_analyzed = False
+
 while not env.isDone():
     # 记录任务信息
     prev_tasks = len(env.task_manager.getAllTasks())
@@ -72,19 +83,28 @@ while not env.isDone():
     # 每10个时间步收集一次数据
     if int(env.simulation_time * 10) % 10 == 0:
         data_collector.collect(env, algorithm_module)
-        print(f"Time {env.simulation_time}: Tasks - Previous: {prev_tasks}, Current: {curr_tasks}, Done: {done_tasks}")
+        # print(f"Time {env.simulation_time}: Tasks - Previous: {prev_tasks}, Current: {curr_tasks}, Done: {done_tasks}")
     
+       # 当模拟运行一段时间后提取交通密度数据（一次性）
+    if env.simulation_time > 20 and not density_analyzed:
+        print("\n正在提取交通密度数据...")
+        context_extractor.extract_traffic_density_areas(env.simulation_time)
+        density_analyzed = True
+        
+        # 生成包含交通密度数据的可视化
+        context_extractor.visualize_context('context_visualization.png')
+        context_extractor.export_context_data('context_data.json')
+    
+
     print(f"Simulation time: {env.simulation_time:.2f}, Reward: {accumulated_reward:.2f}", end='\r')
     
     env.render()  # 渲染可视化
 
-# 保存数据
-data_collector.save_to_csv('airfogsim_metrics.csv')
-
-# 可视化数据
-data_collector.plot_metrics()
+# 保存数据并可视化
+data_collector.save_to_csv('global_data.csv')
+data_collector.plot_metrics('global_metrics.png')
 
 # 关闭环境
 env.close()
 
-print("\nSimulation completed. Data has been saved to 'airfogsim_metrics.csv'.")
+print("\nSimulation done.")
