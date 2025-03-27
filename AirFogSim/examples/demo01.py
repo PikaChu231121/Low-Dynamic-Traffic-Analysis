@@ -37,10 +37,7 @@ env = AirFogSimEnv(config, interactive_mode='graphic')  # 使用图形界面模�
 
 # 创建上下文提取器并提取上下文信息
 context_extractor = ContextExtractor(env, config_path)
-context_extractor.extract_traffic_topology()
-context_extractor.extract_nonfly_zones()
-context_extractor.extract_computation_capacity()
-context_extractor.extract_mission_characteristics()
+context_extractor.extract_all_context()
 
 # 创建算法模块
 algorithm_module = BaseAlgorithmModule()
@@ -83,7 +80,7 @@ while not env.isDone():
     # 每10个时间步收集一次数据
     if int(env.simulation_time * 10) % 10 == 0:
         data_collector.collect(env, algorithm_module)
-        # print(f"Time {env.simulation_time}: Tasks - Previous: {prev_tasks}, Current: {curr_tasks}, Done: {done_tasks}")
+        print(f"Time {env.simulation_time}: Tasks - Previous: {prev_tasks}, Current: {curr_tasks}, Done: {done_tasks}")
     
        # 当模拟运行一段时间后提取交通密度数据（一次性）
     if env.simulation_time > 20 and not density_analyzed:
@@ -92,8 +89,8 @@ while not env.isDone():
         density_analyzed = True
         
         # 生成包含交通密度数据的可视化
-        context_extractor.visualize_context('context_visualization.png')
-        context_extractor.export_context_data('context_data.json')
+        context_extractor.visualize_context('output/context_visualization.png')
+        context_extractor.export_context_data('output/context_data.json')
     
 
     print(f"Simulation time: {env.simulation_time:.2f}, Reward: {accumulated_reward:.2f}", end='\r')
@@ -101,8 +98,8 @@ while not env.isDone():
     env.render()  # 渲染可视化
 
 # 保存数据并可视化
-data_collector.save_to_csv('global_data.csv')
-data_collector.plot_metrics('global_metrics.png')
+data_collector.save_to_csv('output/global_data.csv')
+data_collector.plot_metrics('output/global_metrics.png')
 
 # 关闭环境
 env.close()

@@ -30,13 +30,11 @@ class ContextExtractor:
             return yaml.safe_load(f)
         
     def extract_all_context(self):
-        """提取所有上下文信息"""
+        """提取所有前置上下文信息"""
         self.extract_traffic_topology()
         self.extract_nonfly_zones()
         self.extract_computation_capacity()
-        self.extract_traffic_density_areas()
         self.extract_mission_characteristics()
-        return self.context_data
     
     def extract_traffic_topology(self):
         """从SUMO网络文件中提取交通拓扑信息"""
@@ -477,7 +475,10 @@ class ContextExtractor:
                             ax.add_patch(rect)
             except Exception as e:
                 print(f"绘制热图时出错: {e}")
-        
+
+        # 上下翻转图像
+        ax.invert_yaxis()
+
         # 设置图例和标题
         handles, labels = ax.get_legend_handles_labels()
         by_label = dict(zip(labels, handles))
