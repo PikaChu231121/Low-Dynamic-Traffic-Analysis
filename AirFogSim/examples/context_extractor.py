@@ -23,6 +23,8 @@ class ContextExtractor:
         self.sumo_net_file = os.path.join(project_root, 
                                          self.config['sumo']['sumo_net'])
         self.context_data = {}
+        # 添加一个字典用于存储多个时间点的交通密度数据
+        self.traffic_density_history = {}
         
     def _load_config(self, config_path):
         """加载配置文件"""
@@ -190,150 +192,107 @@ class ContextExtractor:
         print(f"成功提取计算能力信息, 总CPU容量: {total_cpu}")
     
     def extract_traffic_density_areas(self, simulation_time=None):
-        """识别高交通流密度区域，使用traffic_manager的现有方法获取交通数据"""
+        """识别高交通流密度区域，分别计算车辆和无人机的密度"""
         if not hasattr(self, 'simulator') or self.simulator is None:
-            self.context_data['traffic_density'] = {
+            density_data = {
                 'note': "模拟器未初始化"
             }
+            if simulation_time is not None:
+                self.traffic_density_history[simulation_time] = density_data
             return
-            
+
         try:
-            # 使用正确的方法获取车辆信息
+            # 获取车辆和无人机位置
             vehicle_positions = []
+            uav_positions = []
             if hasattr(self.simulator, 'traffic_manager'):
-                # 获取车辆信息
                 vehicle_infos = self.simulator.traffic_manager.getVehicleTrafficInfos()
-                for vehicle_id, info in vehicle_infos.items():
+                for info in vehicle_infos.values():
                     pos = info.get('position')
                     if pos:
                         vehicle_positions.append((pos[0], pos[1]))
-            
-                # 获取UAV信息
-                uav_positions = []
+
                 uav_infos = self.simulator.traffic_manager.getUAVTrafficInfos()
-                for uav_id, info in uav_infos.items():
+                for info in uav_infos.values():
                     pos = info.get('position')
                     if pos:
                         uav_positions.append((pos[0], pos[1]))
-            
+
             # 如果没有交通数据，返回空结果
             if not vehicle_positions and not uav_positions:
-                self.context_data['traffic_density'] = {
+                density_data = {
                     'note': "无交通数据可用",
                     'time': simulation_time
                 }
+                if simulation_time is not None:
+                    self.traffic_density_history[simulation_time] = density_data
                 return
-                
-            # 使用网格方法识别高密度区域
-            if vehicle_positions or uav_positions:
-                all_positions = vehicle_positions + uav_positions
-                
-                # 确定区域边界
-                if all_positions:
-                    x_coords = [p[0] for p in all_positions]
-                    y_coords = [p[1] for p in all_positions]
-                    
-                    min_x, max_x = min(x_coords), max(x_coords)
-                    min_y, max_y = min(y_coords), max(y_coords)
-                    
-                    # 添加缓冲区
-                    buffer = 500
-                    min_x -= buffer
-                    max_x += buffer
-                    min_y -= buffer
-                    max_y += buffer
-                    
-                    # 创建网格
-                    grid_size = 500  # 网格大小
-                    grid_width = int((max_x - min_x) / grid_size) + 1
-                    grid_height = int((max_y - min_y) / grid_size) + 1
-                    
-                    density_grid = np.zeros((grid_height, grid_width))
-                    
-                    # 计算每个网格的交通密度
-                    for pos in all_positions:
-                        grid_x = int((pos[0] - min_x) / grid_size)
-                        grid_y = int((pos[1] - min_y) / grid_size)
-                        
-                        if 0 <= grid_x < grid_width and 0 <= grid_y < grid_height:
-                            density_grid[grid_y, grid_x] += 1
-                    
-                    # 识别高密度区域（密度大于平均值+标准差的区域）
-                    avg_density = np.mean(density_grid)
-                    std_density = np.std(density_grid)
-                    
-                    high_density_threshold = avg_density + std_density
-                    medium_density_threshold = avg_density
-                    
-                    high_density_areas = []
-                    medium_density_areas = []
-                    
-                    for y in range(grid_height):
-                        for x in range(grid_width):
-                            density = density_grid[y, x]
-                            if density > high_density_threshold:
-                                # 高密度区域
-                                area_x1 = min_x + x * grid_size
-                                area_y1 = min_y + y * grid_size
-                                area_x2 = area_x1 + grid_size
-                                area_y2 = area_y1 + grid_size
-                                
-                                high_density_areas.append({
-                                    'bounds': [area_x1, area_y1, area_x2, area_y2],
-                                    'density': float(density),
-                                    'center': [(area_x1 + area_x2)/2, (area_y1 + area_y2)/2]
-                                })
-                            elif density > medium_density_threshold:
-                                # 中密度区域
-                                area_x1 = min_x + x * grid_size
-                                area_y1 = min_y + y * grid_size
-                                area_x2 = area_x1 + grid_size
-                                area_y2 = area_y1 + grid_size
-                                
-                                medium_density_areas.append({
-                                    'bounds': [area_x1, area_y1, area_x2, area_y2],
-                                    'density': float(density),
-                                    'center': [(area_x1 + area_x2)/2, (area_y1 + area_y2)/2]
-                                })
-                    
-                    # 保存密度热图数据用于可视化
-                    self.context_data['traffic_density'] = {
-                        'high_density_areas': high_density_areas,
-                        'medium_density_areas': medium_density_areas,
-                        'grid_data': {
-                            'min_x': float(min_x),
-                            'min_y': float(min_y),
-                            'max_x': float(max_x),
-                            'max_y': float(max_y),
-                            'grid_size': grid_size,
-                            'density_grid': density_grid.tolist(),
-                            'avg_density': float(avg_density),
-                            'std_density': float(std_density)
-                        },
-                        'vehicle_count': len(vehicle_positions),
-                        'uav_count': len(uav_positions),
-                        'time': simulation_time
-                    }
-                    print(f"成功提取交通密度区域信息: 检测到{len(high_density_areas)}个高密度区域, {len(medium_density_areas)}个中密度区域")
-                else:
-                    self.context_data['traffic_density'] = {
-                        'note': "没有位置数据",
-                        'time': simulation_time
-                    }
-            else:
-                self.context_data['traffic_density'] = {
-                    'note': "没有车辆或UAV数据",
+
+            # 使用网格方法分别计算车辆和无人机的密度
+            all_positions = vehicle_positions + uav_positions
+            if all_positions:
+                x_coords = [p[0] for p in all_positions]
+                y_coords = [p[1] for p in all_positions]
+                min_x, max_x = min(x_coords), max(x_coords)
+                min_y, max_y = min(y_coords), max(y_coords)
+
+                buffer = 500
+                min_x -= buffer
+                max_x += buffer
+                min_y -= buffer
+                max_y += buffer
+
+                grid_size = 500
+                grid_width = int((max_x - min_x) / grid_size) + 1
+                grid_height = int((max_y - min_y) / grid_size) + 1
+
+                vehicle_density_grid = np.zeros((grid_height, grid_width))
+                uav_density_grid = np.zeros((grid_height, grid_width))
+
+                for pos in vehicle_positions:
+                    grid_x = int((pos[0] - min_x) / grid_size)
+                    grid_y = int((pos[1] - min_y) / grid_size)
+                    if 0 <= grid_x < grid_width and 0 <= grid_y < grid_height:
+                        vehicle_density_grid[grid_y, grid_x] += 1
+
+                for pos in uav_positions:
+                    grid_x = int((pos[0] - min_x) / grid_size)
+                    grid_y = int((pos[1] - min_y) / grid_size)
+                    if 0 <= grid_x < grid_width and 0 <= grid_y < grid_height:
+                        uav_density_grid[grid_y, grid_x] += 1
+
+                # 将计数值转换为单位面积的密度
+                conversion_factor = 1000000
+                grid_area = grid_size * grid_size
+                vehicle_density_grid = vehicle_density_grid / grid_area * conversion_factor
+                uav_density_grid = uav_density_grid / grid_area * conversion_factor
+
+                avg_vehicle_density = np.mean(vehicle_density_grid)
+                avg_uav_density = np.mean(uav_density_grid)
+
+                density_data = {
+                    'vehicle_density_grid': vehicle_density_grid.tolist(),
+                    'uav_density_grid': uav_density_grid.tolist(),
+                    'avg_vehicle_density': float(avg_vehicle_density),
+                    'avg_uav_density': float(avg_uav_density),
+                    'vehicle_count': len(vehicle_positions),
+                    'uav_count': len(uav_positions),
                     'time': simulation_time
                 }
+
+                if simulation_time is not None:
+                    self.traffic_density_history[simulation_time] = density_data
+
+                print(f"成功提取交通密度信息[时间点 {simulation_time}]: 车辆密度平均值 {avg_vehicle_density:.2f}, 无人机密度平均值 {avg_uav_density:.2f}")
         except Exception as e:
             print(f"提取交通密度信息失败: {e}")
-            import traceback
-            traceback.print_exc()
-            self.context_data['traffic_density'] = {
+            density_data = {
                 'error': str(e),
                 'time': simulation_time
             }
-    
+            if simulation_time is not None:
+                self.traffic_density_history[simulation_time] = density_data
+
     def extract_mission_characteristics(self):
         """提取任务特征信息"""
         task_config = self.config['task']
@@ -498,18 +457,15 @@ class ContextExtractor:
             plt.show()
 
     def export_context_data(self, output_path):
-        """将上下文数据导出为JSON文件"""
+        """将上下文数据导出为JSON文件，包含分开的车辆和无人机密度"""
         import json
-        
-        # 确保所有数据是可序列化的
+
         def make_serializable(obj):
             if isinstance(obj, (np.int_, np.intc, np.intp, np.int8, np.int16, np.int32, 
                                np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
                 return int(obj)
             elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
                 return float(obj)
-            elif isinstance(obj, (np.complex_, np.complex64, np.complex128)):
-                return str(obj)
             elif isinstance(obj, np.ndarray):
                 return obj.tolist()
             elif isinstance(obj, dict):
@@ -518,10 +474,201 @@ class ContextExtractor:
                 return [make_serializable(i) for i in obj]
             else:
                 return obj
-        
-        serializable_data = make_serializable(self.context_data)
-        
+
+        export_data = make_serializable(self.context_data.copy())
+        export_data['traffic_density_history'] = make_serializable(self.traffic_density_history)
+
         with open(output_path, 'w') as f:
-            json.dump(serializable_data, f, indent=4)
-        
+            json.dump(export_data, f, indent=4)
+
         print(f"上下文数据已导出到 {output_path}")
+
+    def export_context_data_summary(self, output_path):
+        """导出精简版的上下文数据，仅包含AI预测所需的关键信息"""
+        import json
+
+        def make_serializable(obj):
+            if isinstance(obj, (np.int_, np.intc, np.intp, np.int8, np.int16, np.int32, 
+                               np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
+                return int(obj)
+            elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, dict):
+                return {k: make_serializable(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [make_serializable(i) for i in obj]
+            else:
+                return obj
+
+        # 创建精简版数据结构
+        summary_data = {
+            "simulation_info": {
+                "vehicle_count": self.config['simulation'].get('vehicle_count', 0),
+                "uav_count": self.config['traffic'].get('max_n_UAVs', 0),
+                "rsu_count": len(self.config['traffic'].get('RSU_positions', [])),
+                "cloud_count": self.config['traffic'].get('max_n_cloudServers', 0)
+            },
+            "traffic_topology": {
+                "junction_count": self.context_data.get('traffic_topology', {}).get('junction_count', 0),
+                "edge_count": self.context_data.get('traffic_topology', {}).get('edge_count', 0),
+            },
+            "computation_capacity": {
+                "total_cpu": self.context_data.get('computation_capacity', {}).get('total_cpu', 0),
+                "vehicle_cpu": self.context_data.get('computation_capacity', {}).get('vehicle', {}).get('cpu', 0),
+                "uav_cpu": self.context_data.get('computation_capacity', {}).get('uav', {}).get('cpu', 0),
+                "rsu_cpu": self.context_data.get('computation_capacity', {}).get('rsu', {}).get('cpu', 0),
+                "cloud_cpu": self.context_data.get('computation_capacity', {}).get('cloud', {}).get('cpu', 0)
+            },
+            "mission_characteristics": self.context_data.get('mission_characteristics', {})
+        }
+
+        # 添加关键交叉路口信息（包括坐标）
+        key_junctions_with_coords = []
+        key_junction_ids = [j[0] for j in self.context_data.get('key_junctions', [])[:5]]  # 获取前5个关键交叉路口ID
+
+        if 'traffic_topology' in self.context_data and 'junctions' in self.context_data['traffic_topology']:
+            junctions = self.context_data['traffic_topology']['junctions']
+            for junction in junctions:
+                if junction['id'] in key_junction_ids:
+                    idx = key_junction_ids.index(junction['id'])
+                    connections = self.context_data['key_junctions'][idx][1]  # 获取连接数
+                    key_junctions_with_coords.append({
+                        'id': junction['id'],
+                        'x': junction['x'],
+                        'y': junction['y'],
+                        'connections': connections,
+                        'type': junction.get('type', 'unknown')
+                    })
+
+        summary_data["traffic_topology"]["key_junctions"] = key_junctions_with_coords
+
+        # 添加禁飞区信息（包括坐标）
+        nonfly_zones_with_coords = []
+        if 'nonfly_zones' in self.context_data and 'zones' in self.context_data['nonfly_zones']:
+            zones = self.context_data['nonfly_zones']['zones']
+            for zone in zones:
+                nonfly_zones_with_coords.append({
+                    'centroid': zone.get('centroid', (0, 0)),
+                    'area': zone.get('area', 0),
+                    'coordinates': zone.get('coordinates', [])[:4]  # 只保留前几个坐标点，避免数据过大
+                })
+
+        summary_data["nonfly_zones"] = {
+            "count": self.context_data.get('nonfly_zones', {}).get('count', 0),
+            "total_area": self.context_data.get('nonfly_zones', {}).get('total_area', 0),
+            "area_ratio": self.context_data.get('nonfly_zones', {}).get('area_ratio', 0),
+            "zones": nonfly_zones_with_coords
+        }
+
+        # 添加RSU位置信息
+        rsu_positions = self.config['traffic'].get('RSU_positions', [])
+        summary_data["rsu_positions"] = rsu_positions
+
+        # 添加精简版交通密度历史数据
+        density_summary = {}
+        for time_point, data in self.traffic_density_history.items():
+            if 'vehicle_density_grid' in data and 'uav_density_grid' in data:
+                # 提取高密度网格信息
+                vehicle_density_grid = np.array(data['vehicle_density_grid'])
+                uav_density_grid = np.array(data['uav_density_grid'])
+
+                min_x, min_y = 0, 0  # 假设网格的左下角坐标
+                grid_size = 500
+
+                high_density_vehicle = np.argwhere(vehicle_density_grid > np.mean(vehicle_density_grid) + np.std(vehicle_density_grid))
+                high_density_uav = np.argwhere(uav_density_grid > np.mean(uav_density_grid) + np.std(uav_density_grid))
+
+                vehicle_high_density_info = [
+                    {
+                        "coordinates": [
+                            min_x + grid_size * y,  # 转换为具体的X坐标
+                            min_y + grid_size * x   # 转换为具体的Y坐标
+                        ],
+                        "density": float(vehicle_density_grid[x, y])
+                    }
+                    for x, y in high_density_vehicle
+                ]
+                uav_high_density_info = [
+                    {
+                        "coordinates": [
+                            min_x + grid_size * y,  # 转换为具体的X坐标
+                            min_y + grid_size * x   # 转换为具体的Y坐标
+                        ],
+                        "density": float(uav_density_grid[x, y])
+                    }
+                    for x, y in high_density_uav
+                ]
+
+                density_summary[time_point] = {
+                    "time": data.get('time'),
+                    "vehicle_count": data.get('vehicle_count', 0),
+                    "uav_count": data.get('uav_count', 0),
+                    "avg_vehicle_density": data.get('avg_vehicle_density', 0),
+                    "avg_uav_density": data.get('avg_uav_density', 0),
+                    "high_density_vehicle": vehicle_high_density_info[:5],  # 只保留前5个高密度区域
+                    "high_density_uav": uav_high_density_info[:5]  # 只保留前5个高密度区域
+                }
+
+        summary_data["traffic_density_timeline"] = density_summary
+
+        # 导出精简版数据
+        with open(output_path, 'w') as f:
+            json.dump(make_serializable(summary_data), f, indent=2)
+
+        print(f"精简版上下文数据已导出到 {output_path}")
+
+    def visualize_density_history(self, output_path=None, max_plots=6):
+        """可视化多个时间点的交通密度热力图，分别展示车辆和无人机的密度"""
+        if not self.traffic_density_history:
+            print("没有可用的交通密度历史数据进行可视化")
+            return
+
+        time_points = sorted(self.traffic_density_history.keys())
+        if len(time_points) > max_plots:
+            indices = np.linspace(0, len(time_points) - 1, max_plots, dtype=int)
+            selected_time_points = [time_points[i] for i in indices]
+        else:
+            selected_time_points = time_points
+
+        n_plots = len(selected_time_points)
+        n_cols = 2  # 每行显示车辆和无人机的密度图
+        n_rows = n_plots
+
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, 5 * n_rows))
+        if n_rows == 1:
+            axes = np.array([axes])  # 确保axes是数组
+        axes = axes.reshape(n_rows, n_cols)
+
+        for i, t in enumerate(selected_time_points):
+            data = self.traffic_density_history[t]
+
+            if 'vehicle_density_grid' in data and 'uav_density_grid' in data:
+                vehicle_density_grid = np.array(data['vehicle_density_grid'])
+                uav_density_grid = np.array(data['uav_density_grid'])
+
+                extent = [0, vehicle_density_grid.shape[1], 0, vehicle_density_grid.shape[0]]
+
+                # 绘制车辆密度
+                ax_vehicle = axes[i, 0]
+                im_vehicle = ax_vehicle.imshow(vehicle_density_grid, extent=extent, origin='lower', cmap='Blues', alpha=0.8)
+                ax_vehicle.set_title(f'Time: {t} - Vehicle Density', fontsize=12)
+                ax_vehicle.set_xlabel('X coordinate')
+                ax_vehicle.set_ylabel('Y coordinate')
+                plt.colorbar(im_vehicle, ax=ax_vehicle, orientation='vertical', label='Vehicle Density')
+
+                # 绘制无人机密度
+                ax_uav = axes[i, 1]
+                im_uav = ax_uav.imshow(uav_density_grid, extent=extent, origin='lower', cmap='Greens', alpha=0.8)
+                ax_uav.set_title(f'Time: {t} - UAV Density', fontsize=12)
+                ax_uav.set_xlabel('X coordinate')
+                ax_uav.set_ylabel('Y coordinate')
+                plt.colorbar(im_uav, ax=ax_uav, orientation='vertical', label='UAV Density')
+
+        plt.tight_layout()
+        if output_path:
+            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            print(f"交通密度历史可视化结果已保存到 {output_path}")
+        else:
+            plt.show()

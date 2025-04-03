@@ -370,7 +370,7 @@ class TkinterLayout(tk.Tk, BaseLayout):
             for coord in zone_coords:
                 x, y = self.position_to_pixel(coord[0], coord[1])
                 pixel_coords.extend([x, y])
-                print(f"原始坐标 {coord} -> 画布坐标 ({x}, {y})")  # 调试输出
+                # print(f"原始坐标 {coord} -> 画布坐标 ({x}, {y})")  # 调试输出
             # 绘制闭合多边形（确保首尾坐标相同）
             if pixel_coords[0:2] != pixel_coords[-2:]:
                 pixel_coords.extend(pixel_coords[0:2])

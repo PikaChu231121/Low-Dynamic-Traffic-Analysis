@@ -62,8 +62,9 @@ if junctions:
 
 # 模拟执行
 accumulated_reward = 0
-# 标志变量，跟踪是否已经提取了交通密度数据
-density_analyzed = False
+# 设置交通密度采样间隔
+density_sampling_interval = 10 # 每10个时间单位采样一次
+next_density_sampling = 0  # 从头开始采样
 
 while not env.isDone():
     # 记录任务信息
@@ -82,20 +83,28 @@ while not env.isDone():
         data_collector.collect(env, algorithm_module)
         print(f"Time {env.simulation_time}: Tasks - Previous: {prev_tasks}, Current: {curr_tasks}, Done: {done_tasks}")
     
-       # 当模拟运行一段时间后提取交通密度数据（一次性）
-    if env.simulation_time > 20 and not density_analyzed:
-        print("\n正在提取交通密度数据...")
+    # 定期提取交通密度数据
+    if env.simulation_time >= next_density_sampling:
+        print(f"\n正在提取交通密度数据 (时间点: {env.simulation_time})...")
         context_extractor.extract_traffic_density_areas(env.simulation_time)
-        density_analyzed = True
-        
-        # 生成包含交通密度数据的可视化
-        context_extractor.visualize_context('output/context_visualization.png')
-        context_extractor.export_context_data('output/context_data.json')
+        next_density_sampling += density_sampling_interval
     
-
     print(f"Simulation time: {env.simulation_time:.2f}, Reward: {accumulated_reward:.2f}", end='\r')
     
     env.render()  # 渲染可视化
+
+# 完成模拟后，可视化和导出数据
+# 导出带有所有时间点密度数据的上下文信息
+context_extractor.export_context_data('output/context_data.json')
+
+# 导出精简版上下文数据，便于AI分析
+context_extractor.export_context_data_summary('output/context_summary.json')
+
+# 生成当前时间点的上下文可视化
+context_extractor.visualize_context('output/context_visualization.png')
+
+# 生成交通密度随时间变化的可视化
+context_extractor.visualize_density_history('output/density_history.png')
 
 # 保存数据并可视化
 data_collector.save_to_csv('output/global_data.csv')
