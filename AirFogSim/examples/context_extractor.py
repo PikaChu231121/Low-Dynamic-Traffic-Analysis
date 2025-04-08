@@ -8,6 +8,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.colors import LinearSegmentedColormap
 
+
+def _load_config(config_path):
+    """加载配置文件"""
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+
+
 class ContextExtractor:
     def __init__(self, simulator, config_path):
         """
@@ -18,19 +25,14 @@ class ContextExtractor:
             config_path: 配置文件路径
         """
         self.simulator = simulator
-        self.config = self._load_config(config_path)
+        self.config = _load_config(config_path)
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         self.sumo_net_file = os.path.join(project_root, 
                                          self.config['sumo']['sumo_net'])
         self.context_data = {}
         # 添加一个字典用于存储多个时间点的交通密度数据
         self.traffic_density_history = {}
-        
-    def _load_config(self, config_path):
-        """加载配置文件"""
-        with open(config_path, 'r') as f:
-            return yaml.safe_load(f)
-        
+
     def extract_all_context(self):
         """提取所有前置上下文信息"""
         self.extract_traffic_topology()
