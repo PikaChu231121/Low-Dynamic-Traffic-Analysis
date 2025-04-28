@@ -1,0 +1,160 @@
+Final Results:
+[
+  {
+    "equation": "c[0]*x1",
+    "complexity": 3,
+    "mae": 0.004447364510377963,
+    "fitted_params": [
+      0.007813186533521914
+    ]
+  },
+  {
+    "equation": "c[0]*x1+c[1]*x5",
+    "complexity": 7,
+    "mae": 0.004298531151125721,
+    "fitted_params": [
+      0.010123738214640677,
+      -0.0007303039798606136
+    ]
+  },
+  {
+    "equation": "c[0]*x1-c[1]*x4+c[2]*x5",
+    "complexity": 11,
+    "mae": 0.0042910511151538966,
+    "fitted_params": [
+      0.009908571162398336,
+      -0.0001777980748668787,
+      -0.0006676498913600951
+    ]
+  },
+  {
+    "equation": "c[0]*x1+c[1]*x2+c[2]*x4+c[3]*x5+c[4]*x6",
+    "complexity": 19,
+    "mae": 0.003677306422255002,
+    "fitted_params": [
+      0.009928062254330326,
+      0.0006860717971482982,
+      -0.0005038912928285609,
+      -0.0019799685808802826,
+      0.0071942705432136485
+    ]
+  }
+]
+[
+  {
+    "equation": "c[0]*x1",
+    "complexity": 3,
+    "mae": 0.7836848856674039,
+    "fitted_params": [
+      0.5744162372562175
+    ]
+  },
+  {
+    "equation": "c[0]*x1+c[1]*x3",
+    "complexity": 7,
+    "mae": 0.6865764483114195,
+    "fitted_params": [
+      0.5404782074618715,
+      53.49000131610455
+    ]
+  },
+  {
+    "equation": "c[0]*x1+c[1]",
+    "complexity": 5,
+    "mae": 0.3732326639202903,
+    "fitted_params": [
+      0.2187272347426921,
+      1.9602551586949395
+    ]
+  }
+]
+[
+  {
+    "equation": "c[0]*x1",
+    "complexity": 3,
+    "mae": 0.1724959230917879,
+    "fitted_params": [
+      0.32798133017182396
+    ]
+  },
+  {
+    "equation": "c[0]*x1+c[1]*x2",
+    "complexity": 7,
+    "mae": 0.1698091515871783,
+    "fitted_params": [
+      0.36656841072171964,
+      -0.04125019198515126
+    ]
+  },
+  {
+    "equation": "c[0]*x1+c[1]*x2+c[2]",
+    "complexity": 9,
+    "mae": 0.009258076277680924,
+    "fitted_params": [
+      0.021439711770043376,
+      0.0038031362755920994,
+      0.872038014599215
+    ]
+  }
+]
+[
+  {
+    "equation": "c[0]",
+    "complexity": 1,
+    "mae": 9.357386332453643e-08,
+    "fitted_params": [
+      7.193773795223528
+    ]
+  },
+  {
+    "equation": "c[0]*x3",
+    "complexity": 3,
+    "mae": 2.80988921019798e-09,
+    "fitted_params": [
+      655.5326288188769
+    ]
+  },
+  {
+    "equation": "c[0]+c[1]*x3",
+    "complexity": 5,
+    "mae": 0.0,
+    "fitted_params": [
+      7.168755505825113,
+      2.2797830945122284
+    ]
+  }
+]
+Total chain run time: 77.49939823150635 seconds.
+
+
+Iteration Information:
+{
+  "Iteration number": "Seed",
+  "LLM Initial Thoughts": "Pattern 1:\n- Analyze the dependent variable y and its relation to the independent variables x1, x2, ..., x6.\n- Notice that x3 (UAV density) has no variation, meaning it doesn't contribute to explaining y.\n- Consider possible interactions between x1 (task success ratio) and other variables.\n- A possible simple model could be a linear combination of x1, x2, x4, x5, and x6.\n- Try expressions involving simple additions and subtractions of these variables.\n\nPattern 2:\n- The dependent variable y is the V2U rate.\n- Independent variables include x1 (vehicle density), x2 (UAV density), and x3 (compute load).\n- The UAV density (x2) is constant and doesn't contribute to variability.\n- Relationship could be linear or involve interactions between x1 and x3.\n- Consider expressions with x1 and x3, such as polynomial combinations or interactions.\n\nPattern 3:\n- The dependent variable y is the task success ratio.\n- Independent variables include x1 (V2U rate), x2 (V2I rate), and x3 (compute load).\n- Task success ratio y is slightly increasing and stabilizing.\n- Look for interactions between x1 and x2 as they might jointly affect y.\n\nPattern 4:\n- The dependent variable y is the UAV density, which is constant.\n- Any expression will need to reflect the constant nature of y.\n- Hence, expressions should reflect y's constancy irrespective of x1, x2, and x3.",
+  "New equations generated": "[\n  [\"c0 * x1 + c1 * x2 + c2 * x4 + c3 * x5 + c4 * x6\", \"c0 * x1 - c1 * x4 + c2 * x5\", \"c0 * x2 + c1 * x4 - c2 * x6\"],\n  [\"c0 * x1 + c1 * x3\", \"c0 * x1 * x3\", \"c0 * x1 + c1\"],\n  [\"c0 * x1 + c1 * x2\", \"c0 * x1 + c1 * x2 + c2\", \"c0 * x2 + c1 * x3\"],\n  [\"c0\", \"c0\", \"c0\"]\n]"
+}
+{
+  "Iteration number": 1,
+  "LLM Thoughts": "- The task involves creating symbolic expressions for four distinct patterns based on the given dataset. Each pattern relates to a different key performance indicator in a vehicular network context.\n  \n- **Pattern 1**: The first pattern aims to predict the average compute load of the next time slot using current indicators such as task success ratio, vehicle density, UAV density, and vehicle counts at three junctions. The dataset shows a small range of variation in the dependent variable, suggesting that the relationship might be linear or involve small corrective terms. The previously suggested expressions involve linear combinations of the variables, which seem to fit well given the low mean absolute error (MAE). For diversity, I would consider introducing non-linear terms involving multiplication or interaction terms for exploration.\n\n- **Pattern 2**: For the second pattern, which predicts the average V2U rate, the dependent variable shows significant variation. Previous expressions with linear terms have high errors, indicating that non-linearity may be present. Previous results suggest that the inclusion of compute load is essential, but the current expressions do not achieve low error. Exploring expressions that leverage multiplication or division should be considered.\n\n- **Pattern 3**: This pattern seeks to predict the task success ratio. The previous expressions suggest a reasonable fit with linear terms, although the lowest MAE is still relatively high compared to other patterns. The existing expressions did not consider interactions between variables, which might be relevant given the context of vehicular networks. Introducing non-linear interactions might help capture the dynamics better.\n\n- **Pattern 4**: The fourth pattern involves predicting the UAV density. The dependent variable is constant across all samples, implying that it does not depend on any of the current slot's indicators. The simplest model, a constant predictor, already achieves negligible error, which suggests that more complex models are unnecessary.",
+  "New equations generated": "\\[\n\\begin{bmatrix}\n\\begin{aligned}\n&\\left[ \n    \"c_0 \\cdot x_1 + c_1 \\cdot x_2 + c_2 \\cdot x_4\", \\\\\n    \"c_0 \\cdot x_1 \\cdot x_5 + c_1 \\cdot x_2\", \\\\\n    \"c_0 \\cdot \\log(x_1 + x_2) + c_1 \\cdot x_6\" \n\\right]\n\\end{aligned}\n\\\\\n\n\\begin{aligned}\n&\\left[ \n    \"c_0 \\cdot x_1 \\cdot x_3 + c_1\", \\\\\n    \"c_0 \\cdot \\sqrt{x_1 + x_2} + c_1 \\cdot x_3\", \\\\\n    \"c_0 \\cdot x_1 + c_1 \\cdot \\exp(x_3)\"\n\\right]\n\\end{aligned}\n\\\\\n\n\\begin{aligned}\n&\\left[ \n    \"c_0 \\cdot x_1 + c_1 \\cdot x_2 \\cdot x_3\", \\\\\n    \"c_0 \\cdot x_1^2 + c_1 \\cdot x_3\", \\\\\n    \"c_0 \\cdot x_2 + c_1 \\cdot \\log(x_3)\"\n\\right]\n\\end{aligned}\n\\\\\n\n\\begin{aligned}\n&\\left[ \n    \"c_0\", \\\\\n    \"c_0\", \\\\\n    \"c_0\"\n\\right]\n\\end{aligned}\n\\end{bmatrix}\n\\]"
+}
+{
+  "Iteration number": 2,
+  "LLM Thoughts": "Pattern 1:\nThe dependent variable is the average compute load of the next time slot, and the independent variables include current task success ratio, vehicle density, UAV density, and junction vehicle counts. Based on the given dataset, the equations with lower complexity have higher mean absolute errors, indicating a trade-off between accuracy and simplicity. The pattern suggests that multiple variables contribute to the prediction of the compute load, and simpler models might not capture all the necessary interactions.\n\nPattern 2:\nThe dependent variable is the average V2U rate of the next time slot, with independent variables being current vehicle density, UAV density, and compute load. The dataset suggests that the V2U rate is highly dependent on these factors, with the simplest model having a higher mean absolute error. Thus, a balance between model complexity and accuracy is essential.\n\nPattern 3:\nThe dependent variable is the task success ratio of the next time slot, predicted by current average V2U rate, average V2I rate, and compute load. The equations provided suggest that including more variables reduces the mean absolute error, indicating the importance of considering multiple factors in predicting task success ratio.\n\nPattern 4:\nThe dependent variable is the UAV density of the next time slot, and the independent variables include current average U2I rate, compute load, and nonfly zone area ratio. The dataset indicates a very low mean absolute error for constant models, suggesting that UAV density may be relatively stable or not strongly influenced by the given independent variables within the dataset.",
+  "New equations generated": "[[\"c_0 * x_1\", \"c_0 * x_1 + c_1 * x_2\", \"c_0 * x_1 + c_1 * x_2 + c_2 * x_4\"], [\"c_0 * x_1\", \"c_0 * x_1 + c_1 * x_3\", \"c_0 * x_1 * x_3\"], [\"c_0 * x_1\", \"c_0 * x_1 + c_1 * x_2\", \"c_0 * x_1 + c_1 * x_2 + c_2\"], [\"c_0\", \"c_0 + c_1 * x_2\", \"c_0 + c_1 * x_3\"]]"
+}
+{
+  "Iteration number": 3,
+  "LLM Thoughts": "Scratch Pad:\n\nPattern 1 Analysis:\n- The simplest expression with the current task success ratio (x1) alone achieves a relatively low complexity and reasonable MAE.\n- Adding more variables reduces MAE slightly but increases complexity.\n- A diverse set of expressions could include those focusing on different combinations of x1, x2, x4, and x5, avoiding SR-similar ones.\n\nPattern 2 Analysis:\n- The simplest model using vehicle density (x1) alone has a high MAE.\n- Adding the current average compute load (x3) drastically improves MAE.\n- Consider focusing on combinations of x1 and x3 to minimize complexity while ensuring diversity.\n\nPattern 3 Analysis:\n- The simplest model using the current average V2U rate (x1) alone is relatively effective.\n- Adding the current average V2I rate (x2) improves MAE significantly.\n- Diverse expressions should explore these variables, avoiding SR-similarity.\n\nPattern 4 Analysis:\n- The simplest model using a constant (c0) achieves zero MAE, indicating that UAV density doesn't change.\n- Adding the nonfly zone area ratio (x3) can provide a different perspective.\n- Diversity can be achieved by exploring different combinations of x1 and x3.",
+  "New equations generated": "[[\"c0 * x1\", \"c0 * x1 + c1 * x4\", \"c0 * x1 + c1 * x5\"],\n [\"c0 * x1 + c1 * x3\", \"c0 * x1\", \"c0 * x3\"],\n [\"c0 * x1 + c1 * x2\", \"c0 * x1\", \"c0 * x2\"],\n [\"c0\", \"c0 + c1 * x3\", \"c0 * x1\"]]"
+}
+{
+  "Iteration number": 4,
+  "LLM Thoughts": "Pattern 1:\n- The dependent variable is the average compute load of the next time slot.\n- The independent variables include the current task success ratio, vehicle density, UAV density, and junction vehicle counts (x1 to x6).\n- From the given equations, there seems to be a strong linear relationship, mainly involving x1, x4, and x5. The complexity and the mean absolute error (mae) decrease as more variables are added. The existing equations suggest that x1 has the most significant impact on the prediction.\n\nPattern 2:\n- The dependent variable is the average V2U rate of the next time slot.\n- The independent variables are the current vehicle density, UAV density, and compute load (x1 to x3).\n- There appears to be a linear relationship with x1 and x3 being significant, as seen in the equations. The best equation has a complexity of 5 and a lower mae of 0.373. The inclusion of x3 seems to improve the fit.\n\nPattern 3:\n- The dependent variable is the task success ratio of the next time slot.\n- The independent variables are the current average V2U rate, average V2I rate, and compute load (x1 to x3).\n- The equations suggest a linear relationship with x1 and x2 being significant contributors to the prediction, with a complexity of 9 and a very low mae of 0.009. Including a constant also improves the fit significantly.\n\nPattern 4:\n- The dependent variable is the UAV density of the next time slot.\n- The independent variables are the current average U2I rate, compute load, and nonfly zone area ratio (x1 to x3).\n- The first pattern shows a constant value for the prediction, indicating a very stable or constant relationship for the dependent variable. The equations suggest a high dependency on x3, as seen in the equations with lower mae values.",
+  "New equations generated": "[[\"c_0 * x_1\", \"c_0 * x_1 + c_1 * x_4\", \"c_0 * x_1 + c_1 * x_5\"], [\"c_0 * x_1\", \"c_0 * x_3\", \"c_0 * x_1 + c_1\"], [\"c_0 * x_1\", \"c_0 * x_2\", \"c_0 * x_1 + c_1 * x_2\"], [\"c_0\", \"c_0 + c_1 * x_3\", \"c_0 * x_3\"]]"
+}
+{
+  "Iteration number": 5,
+  "LLM Thoughts": "Pattern 1:\n- The dependent variable, average compute load of the next time slot, seems to depend primarily on the task success ratio (x1), with smaller contributions from junction vehicle counts (x4, x5) and vehicle density (x2). \n- The simplest model is a linear function of x1. \n- Adding x5 improves fit slightly, indicating that junction vehicle counts might have an influence.\n- Further adding x4 improves the fit even more, suggesting a linear combination of x1, x4, and x5.\n\nPattern 2:\n- The dependent variable, average V2U rate of the next time slot, seems to be influenced most by the vehicle density (x1) and UAV density (x2).\n- Including compute load (x3) significantly improves the model fit, indicating a strong relationship between these factors.\n- Simple linear models seem to capture this relationship well, with the best fit achieved when using a linear combination of x1, x2, and x3.\n\nPattern 3:\n- The dependent variable, task success ratio of the next time slot, is likely influenced by the average V2U rate (x1) and average V2I rate (x2).\n- Compute load (x3) adds a minor improvement to the fit when included, indicating it plays a secondary role.\n- Linear combinations of x1 and x2, possibly with a constant term, appear to capture the pattern effectively.\n\nPattern 4:\n- The dependent variable, UAV density of the next time slot, is constant across the data.\n- The simplest model is a constant value, which fits perfectly without dependence on the independent variables.",
+  "New equations generated": "\\[\n\\begin{bmatrix}\n\\begin{align}\n\\text{Pattern 1:} & \\\\\n1. & c_0 \\cdot x_1 \\\\\n2. & c_0 \\cdot x_1 + c_1 \\cdot x_5 \\\\\n3. & c_0 \\cdot x_1 - c_1 \\cdot x_4 + c_2 \\cdot x_5 \\\\\n\\text{Pattern 2:} & \\\\\n1. & c_0 \\cdot x_1 + c_1 \\cdot x_3 \\\\\n2. & c_0 \\cdot x_1 + c_1 \\cdot x_2 + c_2 \\cdot x_3 \\\\\n3. & c_0 \\cdot x_1 \\\\\n\\text{Pattern 3:} & \\\\\n1. & c_0 \\cdot x_1 + c_1 \\cdot x_2 \\\\\n2. & c_0 \\cdot x_1 + c_1 \\cdot x_2 + c_2 \\\\\n3. & c_0 \\cdot x_1 \\\\\n\\text{Pattern 4:} & \\\\\n1. & c_0 \\\\\n2. & c_0 + c_1 \\cdot x_3 \\\\\n3. & c_0 \\cdot x_3 \\\\\n\\end{align}\n\\end{bmatrix}\n\\]"
+}
