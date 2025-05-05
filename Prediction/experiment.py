@@ -3,6 +3,7 @@ import numpy as np
 from helper import *
 from fittingClass_airfog import FittingOptimizerAirFog
 from fittingClass_nmse import FittingOptimizerNMSE
+import matplotlib.pyplot as plt 
 
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
@@ -161,7 +162,55 @@ class airFog:
                 'New equations generated': IterEquationsStr
             })
 
+        # 在 run 方法结束前调用可视化
+        self.visualize_results(self.results_list)
+
         return self.results_list, self.all_expressions, self.iteration_info, self.usage_list, total_chain_run_time, LLMrawExpressions
+
+    def visualize_results(self, final_results):
+        """可视化最终结果，绘制 MAE 与复杂度的散点图"""
+        num_equations = len(final_results)
+        fig, axes = plt.subplots(1, num_equations, figsize=(5 * num_equations, 5), sharey=True)
+        if num_equations == 1: # 处理只有一个子图的情况
+             axes = [axes]
+
+        for i, results in enumerate(final_results):
+            if not results: # 如果结果列表为空，则跳过
+                axes[i].set_title(f'Equation Set {i+1} (No data)')
+                axes[i].set_xlabel('Complexity')
+                if i == 0:
+                    axes[i].set_ylabel('MAE')
+                continue
+
+            complexities = [r['complexity'] for r in results if r['mae'] != float('inf')]
+            maes = [r['mae'] for r in results if r['mae'] != float('inf')]
+
+            if not complexities or not maes: # 如果过滤后列表为空，则跳过
+                axes[i].set_title(f'Equation Set {i+1} (No valid data)')
+                axes[i].set_xlabel('Complexity')
+                if i == 0:
+                    axes[i].set_ylabel('MAE')
+                continue
+
+            axes[i].scatter(complexities, maes, alpha=0.6)
+            axes[i].set_title(f'Equation Set {i+1}')
+            axes[i].set_xlabel('Complexity')
+            if i == 0:
+                axes[i].set_ylabel('MAE')
+            axes[i].grid(True)
+
+            # 添加最佳点标注 (最低 MAE)
+            if maes:
+                min_mae_idx = np.argmin(maes)
+                best_complexity = complexities[min_mae_idx]
+                best_mae = maes[min_mae_idx]
+                axes[i].scatter(best_complexity, best_mae, color='red', s=100, label=f'Best (MAE={best_mae:.4f})', zorder=5)
+                axes[i].legend()
+
+
+        plt.suptitle('MAE vs. Complexity for Fitted Equations (AirFog)')
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95]) # 调整布局防止标题重叠
+        plt.show() # 显示图表
 
     def cost(self):
         total_prompt_tokens = 0
