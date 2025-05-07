@@ -26,7 +26,7 @@ Expressions must satisfy the following restrictions:
     - Only acceptable binary operators are limited to these four: +, -, *, and /.
     - Only acceptable unary operators are limited to these five: square, cube, sqrt, log, and exp.
     - Do not fit constants, but use c0, c1, etc.
-    - Only include accessible independent variables from data. This dataset has only one, x1.
+    - Only include accessible independent variables from data.
 
 YOUR RESPONSE:
 """
@@ -53,7 +53,7 @@ Expressions must satisfy the following restrictions:
     - Only acceptable binary operators are limited to these four: +, -, *, and /.
     - Only acceptable unary operators are limited to these five: square, cube, sqrt, log, and exp.
     - Do not fit constants, but use c0, c1, etc.
-    - Only include accessible independent variables from data. This dataset has only one, x1.
+    - Only include accessible independent variables from data.
     - Do not suggest SR-similar expressions to avoid redundant expressions.
 
 Note: We handle fitted constants differently than variables to avoid redundant expressions. 
