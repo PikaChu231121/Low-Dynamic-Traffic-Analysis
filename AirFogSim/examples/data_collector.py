@@ -318,98 +318,106 @@ class DataCollector:
     
     def predict_and_compare_metrics(self, formula_json_path, output_plot_path=None, output_error_path=None):
         """
-        使用公式预测下一时隙的指标，并与实际数据对比，输出对比曲线和误差文件
+        使用json文件中所有公式预测下一时隙的指标，并与实际数据对比，输出对比曲线和误差文件。
+        绘图时每类排除MAE最大的两个公式。
         """
         with open(formula_json_path, 'r') as f:
             formula_data = json.load(f)
         final_results = formula_data['final_results']
 
-        # 公式顺序与指标映射
         metric_names = [
             'compute_load_avg',   # 平均计算负载
             'avg_V2U_rate',       # 平均V2U速率
             'task_success_ratio', # 任务成功率
             'uav_density'         # UAV密度
         ]
-        # 选用每类MAE最小的公式
-        best_formulas = []
-        for formulas in final_results:
-            best = min([f for f in formulas if f['mae'] is not None], key=lambda x: x['mae'])
-            best_formulas.append(best)
 
         # 构造输入变量序列
-        # x1: vehicle_density, x2: uav_density, x3: avg_V2U_rate, x4: vehicle_count
         x1 = self.data['vehicle_density']
         x2 = self.data['uav_density']
         x3 = self.data['avg_V2U_rate']
         x4 = self.data['vehicle_count']
-        # 统一长度
         min_len = min(len(x1), len(x2), len(x3), len(x4))
         x1, x2, x3, x4 = x1[:min_len], x2[:min_len], x3[:min_len], x4[:min_len]
         time = self.data['time'][:min_len]
 
-        # 预测与实际对比
         import numpy as np
         import matplotlib.pyplot as plt
 
-        pred_results = {}
-        errors = {}
+        all_pred_results = []
+        all_errors = []
 
+        fig, axes = plt.subplots(2, 2, figsize=(18, 10))
         for idx, metric in enumerate(metric_names):
-            formula = best_formulas[idx]
-            eq = formula['equation']
-            params = formula['fitted_params']
-            # 构造预测值
-            preds = []
-            for i in range(min_len-1):  # 预测下一时隙
-                # 构造变量
-                local_vars = {
-                    'x1': x1[i],
-                    'x2': x2[i],
-                    'x3': x3[i],
-                    'x4': x4[i],
-                    'c': params,
-                    'np': np,
-                    'log': np.log
-                }
-                try:
-                    pred = eval(eq, {}, local_vars)
-                except Exception:
-                    pred = np.nan
-                preds.append(pred)
-            # 对齐实际值（预测t+1, 对比实际t+1）
+            formulas = final_results[idx]
             actual = self.data[metric][1:min_len]
-            pred_results[metric] = {
-                'pred': preds,
-                'actual': actual,
-                'formula': eq,
-                'mae_formula': formula['mae']
-            }
-            # 计算平均误差
-            arr_pred = np.array(preds)
-            arr_actual = np.array(actual)
-            mask = ~np.isnan(arr_pred)
-            if np.sum(mask) > 0:
-                mae = np.mean(np.abs(arr_pred[mask] - arr_actual[mask]))
-            else:
-                mae = None
-            errors[metric] = {
-                'mae': mae,
-                'formula_mae': formula['mae'],
-                'formula': eq
-            }
-
-        # 绘图
-        fig, axes = plt.subplots(2, 2, figsize=(16, 10))
-        for idx, metric in enumerate(metric_names):
             ax = axes[idx//2, idx%2]
-            ax.plot(time[1:min_len], pred_results[metric]['actual'], label='Actual')
-            ax.plot(time[1:min_len], pred_results[metric]['pred'], label='Predicted')
-            ax.set_title(f"{metric} (MAE: {errors[metric]['mae']:.4g})")
+            ax.plot(time[1:min_len], actual, label='Actual', color='black', linewidth=2)
+            metric_pred_results = []
+            metric_errors = []
+            # 先计算所有MAE
+            mae_list = []
+            preds_list = []
+            for fidx, formula in enumerate(formulas):
+                eq = formula['equation']
+                params = formula['fitted_params']
+                preds = []
+                for i in range(min_len-1):
+                    local_vars = {
+                        'x1': x1[i],
+                        'x2': x2[i],
+                        'x3': x3[i],
+                        'x4': x4[i],
+                        'c': params,
+                        'np': np,
+                        'log': np.log
+                    }
+                    try:
+                        pred = eval(eq, {}, local_vars)
+                    except Exception:
+                        pred = np.nan
+                    preds.append(pred)
+                arr_pred = np.array(preds)
+                arr_actual = np.array(actual)
+                mask = ~np.isnan(arr_pred)
+                if np.sum(mask) > 0:
+                    mae = np.mean(np.abs(arr_pred[mask] - arr_actual[mask]))
+                else:
+                    mae = float('inf')
+                mae_list.append((mae, fidx))
+                preds_list.append((preds, formula, mae, params))
+                metric_pred_results.append({
+                    'pred': preds,
+                    'actual': list(actual),
+                    'formula': eq,
+                    'mae_formula': formula['mae'],
+                    'mae': mae,
+                    'params': params
+                })
+                metric_errors.append({
+                    'metric': metric,
+                    'formula_idx': fidx+1,
+                    'mae': mae,
+                    'formula_mae': formula['mae'],
+                    'formula': eq,
+                    'params': params
+                })
+            # 排除MAE最大的两个公式
+            mae_list_sorted = sorted(mae_list, key=lambda x: (x[0] if x[0] is not None else float('inf')))
+            exclude_idx = set(idx for _, idx in mae_list_sorted[-2:])
+            for i, (preds, formula, mae, params) in enumerate(preds_list):
+                if i in exclude_idx:
+                    continue
+                arr_pred = np.array(preds)
+                ax.plot(time[1:min_len], arr_pred, label=f'Pred {i+1} (MAE={mae:.4g})')
+            ax.set_title(f"{metric}")
             ax.set_xlabel('Time')
             ax.set_ylabel(metric)
             ax.legend()
             ax.grid(True)
+            all_pred_results.append(metric_pred_results)
+            all_errors.extend(metric_errors)
+
         plt.tight_layout()
         if output_plot_path:
             plt.savefig(output_plot_path, dpi=300, bbox_inches='tight')
@@ -420,15 +428,15 @@ class DataCollector:
         if output_error_path:
             if output_error_path.endswith('.json'):
                 with open(output_error_path, 'w') as f:
-                    json.dump(errors, f, indent=2)
+                    json.dump(all_errors, f, indent=2)
             else:
                 import csv
                 with open(output_error_path, 'w', newline='') as f:
                     writer = csv.writer(f)
-                    writer.writerow(['metric', 'mae', 'formula_mae', 'formula'])
-                    for metric in metric_names:
+                    writer.writerow(['metric', 'formula_idx', 'mae', 'formula_mae', 'formula', 'params'])
+                    for err in all_errors:
                         writer.writerow([
-                            metric, errors[metric]['mae'], errors[metric]['formula_mae'], errors[metric]['formula']
+                            err['metric'], err['formula_idx'], err['mae'], err['formula_mae'], err['formula'], err['params']
                         ])
-        return errors
+        return all_errors
 
