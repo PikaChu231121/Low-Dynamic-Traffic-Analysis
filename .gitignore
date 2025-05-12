@@ -1,2 +1,13 @@
 .vscode/*
-__pycache__/
+*.log
+*.run
+**/__pycache__/*
+**.pth
+**/runs/**
+tripinfo.xml
+tripinfo.csv
+pyg_wheel/*
+data/*
+paper_code/dependency_trans_gae_dqn/
+*.pyc
+output/

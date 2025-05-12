@@ -1,10 +1,10 @@
 simulation:
-  vehicle_count: 50 # 车辆总数量
-  max_simulation_time: 50 # 运行最大时间
+  vehicle_count: 50
+  max_simulation_time: 50
   simulation_interval: 0.1 # in seconds, for transmission, computation, task generation and assignment, etc.
   traffic_interval: 0.1 # in seconds, for traffic simulation. Remember to set the same value in the SUMO configuration file; otherwise, the simulation will not work properly
   
-# sumo场景构建相关配置
+
 sumo:
   sumo_config: "./sumo_wujiaochang/osm.sumocfg"
   sumo_osm: "./sumo_wujiaochang/osm_bbox.osm.xml"
@@ -13,7 +13,6 @@ sumo:
   export_tripinfo: False # 如果True，则导出tripinfo.xml文件（很大）
   tripinfo_output: "./sumo_wujiaochang/tripinfo.xml"
 
-# 可视化相关文件
 visualization:
   icon_path: "./icon"
 

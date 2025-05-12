@@ -15,7 +15,10 @@ from context_extractor import ContextExtractor
 from airfogsim import AirFogSimEnv, BaseAlgorithmModule
 from airfogsim.scheduler import RewardScheduler, TaskScheduler
 
-# 加载配置文件
+# 获取项目根目录 (AirFogSim)，并将其设置为当前工作目录
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+os.chdir(project_root)
+
 def load_config(path):
     with open(path, 'r') as file:
         return yaml.safe_load(file)
@@ -38,7 +41,6 @@ env = AirFogSimEnv(config, interactive_mode='graphic')  # 使用图形界面模�
 
 # 创建上下文提取器并提取上下文信息
 context_extractor = ContextExtractor(env, config_path)
-# 此处提取了一些不随实验运行时间变化而变化的上下文，如交通拓扑信息、禁飞区信息等
 context_extractor.extract_all_context()
 
 # 创建算法模块
@@ -68,7 +70,6 @@ accumulated_reward = 0
 density_sampling_interval = 10 # 每10个时间单位采样一次
 next_density_sampling = 0  # 从头开始采样
 
-# 仿真主循环
 while not env.isDone():
     # 记录任务信息
     prev_tasks = len(env.task_manager.getAllTasks())
