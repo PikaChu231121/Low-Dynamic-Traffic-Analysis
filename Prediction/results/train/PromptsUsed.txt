@@ -7,9 +7,9 @@ Remember, while we want better-fitted expressions, they must also be short.
 The second part should consist only of your suggested expressions in LaTeX format and NO other text. 
 Suppose there're 2 patterns, where expressions of the first pattern are y11 and y12, and expressions of the second pattern are y21 and y22, the output is a 2-dimensional list like this: [["y11", "y12"], ["y21", "y22"]]
 
-Separate the two parts with this exact string: °∞<EXP>°±. 
-The first part (analysis) must appear before °∞<EXP>°±, and the second part (expressions) must appear after °∞<EXP>°±.
-Do NOT include any text before °∞<EXP>°± or after the list of expressions.
+Separate the two parts with this exact string: ‚Äú<EXP>‚Äù. 
+The first part (analysis) must appear before ‚Äú<EXP>‚Äù, and the second part (expressions) must appear after ‚Äú<EXP>‚Äù.
+Do NOT include any text before ‚Äú<EXP>‚Äù or after the list of expressions.
 
 
 ##Starting Prompt## 
@@ -25,7 +25,7 @@ Expressions must satisfy the following restrictions:
     - Only acceptable binary operators are limited to these four: +, -, *, and /.
     - Only acceptable unary operators are limited to these five: square, cube, sqrt, log, and exp.
     - Do not fit constants, but use c0, c1, etc.
-    - Only include accessible independent variables from data. This dataset has only one, x1.
+    - Only include accessible independent variables from data.
 
 YOUR RESPONSE:
 
@@ -51,7 +51,7 @@ Expressions must satisfy the following restrictions:
     - Only acceptable binary operators are limited to these four: +, -, *, and /.
     - Only acceptable unary operators are limited to these five: square, cube, sqrt, log, and exp.
     - Do not fit constants, but use c0, c1, etc.
-    - Only include accessible independent variables from data. This dataset has only one, x1.
+    - Only include accessible independent variables from data.
     - Do not suggest SR-similar expressions to avoid redundant expressions.
 
 Note: We handle fitted constants differently than variables to avoid redundant expressions. 

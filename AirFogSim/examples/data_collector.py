@@ -8,20 +8,20 @@ class DataCollector:
     def __init__(self):
         self.data = {
             'time': [],
-            'task_success_ratio': [], # 任务成功率
-            'vehicle_count': [],      # 车辆实体数量
-            'uav_count': [],          # 无人机实体数量
-            'avg_V2U_rate': [],       # 车辆与无人机之间的通信速率
-            'avg_V2I_rate': [],       # 车辆与基础设施（如雾节点、基站）之间的通信速率
-            'avg_U2I_rate': [],       # 无人机与基础设施之间的通信速率
-            'compute_load_avg': [],   # 计算负载
-            'vehicle_density': [],    # 车辆密度
-            'uav_density': []         # 无人机密度
+            'task_success_ratio': [],
+            'vehicle_count': [],
+            'uav_count': [],
+            'avg_V2U_rate': [],
+            'avg_V2I_rate': [],
+            'avg_U2I_rate': [],
+            'compute_load_avg': [],
+            'vehicle_density': [],
+            'uav_density': []
         }
         
         # 可以添加特定区域的数据收集
         self.area_specific_data = {}
-
+    
     def collect(self, env, algorithm_module):
         """收集当前时间点的数据"""
         # 更新评估指标
@@ -196,7 +196,7 @@ class DataCollector:
             # print(f"Average compute load: {avg_load:.4f}")
         
         return compute_loads
-
+    
     def count_entities_in_area(self, env, area_bounds, entity_type='vehicle'):
         """计算特定区域内的实体数量
         area_bounds: [min_x, min_y, max_x, max_y]
@@ -221,12 +221,12 @@ class DataCollector:
             pass
         
         return count
-
+    
     def save_to_csv(self, filename):
         """保存数据为CSV文件"""
         df = pd.DataFrame(self.data)
         df.to_csv(filename, index=False)
-
+    
     def plot_metrics(self, ouput_path=None):
         """绘制指标变化图"""
         fig, axes = plt.subplots(3, 2, figsize=(15, 15))
