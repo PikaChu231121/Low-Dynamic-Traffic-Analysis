@@ -1,29 +1,55 @@
+import ast
 import json
 import re
+from typing import List
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 def calculate_mse(equation, data, fitted_params):
-        num_indep_vars = data.shape[1] - 1
-        x = data[:, :num_indep_vars]
-        y = data[:, num_indep_vars]
-        predicted_y = eval(equation, {'c': fitted_params, 'np': np,'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, **{f'x{i+1}':x[:,i].reshape(-1) for i in range(num_indep_vars)}})
+    num_indep_vars = data.shape[1] - 1
+    x = data[:, :num_indep_vars]
+    y = data[:, num_indep_vars]
+    predicted_y = eval(equation, {'c': fitted_params, 'np': np,'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x[:j+1, i-1].reshape(-1), k) for j in range(len(x))]), **{f'x{i+1}':x[:,i].reshape(-1) for i in range(num_indep_vars)}})
 
-        if np.isscalar(predicted_y):
-            predicted_y = np.full(y.shape, predicted_y)
-        mse = mean_squared_error(y, predicted_y)
-        return round(mse, 8)
+    if np.isscalar(predicted_y):
+        predicted_y = np.full(y.shape, predicted_y)
+    mse = mean_squared_error(y, predicted_y)
+    return round(mse, 8)
 
 def calculate_mae(equation, data, fitted_params):
-        num_indep_vars = data.shape[1] - 1
-        x = data[:, :num_indep_vars]
-        y = data[:, num_indep_vars]
-        predicted_y = eval(equation, {'c': fitted_params, 'np': np,'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, **{f'x{i+1}':x[:,i].reshape(-1) for i in range(num_indep_vars)}})
+    num_indep_vars = data.shape[1] - 1
+    x = data[:, :num_indep_vars]
+    y = data[:, num_indep_vars]
+    predicted_y = eval(equation, {'c': fitted_params, 'np': np,'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x[:j+1, i-1].reshape(-1), k) for j in range(len(x))]), **{f'x{i+1}':x[:,i].reshape(-1) for i in range(num_indep_vars)}})
 
-        if np.isscalar(predicted_y):
-            predicted_y = np.full(y.shape, predicted_y)
-        mae = mean_absolute_error(y, predicted_y)
-        return round(mae, 8)
+    if np.isscalar(predicted_y):
+        predicted_y = np.full(y.shape, predicted_y)
+    mae = mean_absolute_error(y, predicted_y)
+    return round(mae, 8)
+
+def calculate_normalized_mse(equation, data, fitted_params):
+    num_indep_vars = data.shape[1] - 1
+    x = data[:, :num_indep_vars]
+    y = data[:, num_indep_vars]
+    predicted_y = eval(equation, {'c': fitted_params, 'np': np,'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x[:j+1, i-1].reshape(-1), k) for j in range(len(x))]), **{f'x{i+1}':x[:,i].reshape(-1) for i in range(num_indep_vars)}})
+
+    if np.isscalar(predicted_y):
+        predicted_y = np.full(y.shape, predicted_y)
+    mse = mean_squared_error(y, predicted_y)
+    normalized_mse = mse / (np.std(y) ** 2)
+    return round(normalized_mse, 8)
+
+def calculate_normalized_mae(equation, data, fitted_params):
+    num_indep_vars = data.shape[1] - 1
+    x = data[:, :num_indep_vars]
+    y = data[:, num_indep_vars]
+    predicted_y = eval(equation, {'c': fitted_params, 'np': np,'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x[:j+1, i-1].reshape(-1), k) for j in range(len(x))]), **{f'x{i+1}':x[:,i].reshape(-1) for i in range(num_indep_vars)}})
+
+    if np.isscalar(predicted_y):
+        predicted_y = np.full(y.shape, predicted_y)
+    mae = mean_absolute_error(y, predicted_y)
+    normalized_mae = mae / (np.std(y))
+    return round(normalized_mae, 8)
 
 def calculate_complexity(equation):
     binary_operator_pattern = re.compile(r'\*{2}|\*{1}|[+]|[-]|[/]')
@@ -37,26 +63,31 @@ def calculate_complexity(equation):
     return complexity
 
 def custom_sorting(data):
-        if isinstance(data, str):
-            data = json.loads(data)
-        
-        if len(data) < 6:
-            return data        
-        else:
-            new_data = data.copy()
-            new_data = sorted(new_data,key=lambda x: (x['mse' if 'mse' in x else 'mae'], x['complexity']), reverse=True)
-            drop = 0
-            i = 0
-            while drop < 3 and i < len(new_data):
-                current_entry = new_data[i]
-                for j in range(i + 1, len(new_data)):
-                    if new_data[j]['complexity'] == current_entry['complexity']:
-                        new_data.pop(i)
-                        drop = drop + 1
-                        break
-                else:
-                    i += 1
-            return new_data
+    if isinstance(data, str):
+        data = json.loads(data)
+    
+    if len(data) < 6:
+        return data        
+    else:
+        new_data = data.copy()
+        error_name = ''
+        for err in 'nmse', 'nmae', 'mse', 'mae':
+            if err in new_data[0]:
+                error_name = err
+                break
+        new_data = sorted(new_data,key=lambda x: (x[error_name], x['complexity']), reverse=True)
+        drop = 0
+        i = 0
+        while drop < 3 and i < len(new_data):
+            current_entry = new_data[i]
+            for j in range(i + 1, len(new_data)):
+                if new_data[j]['complexity'] == current_entry['complexity']:
+                    new_data.pop(i)
+                    drop = drop + 1
+                    break
+            else:
+                i += 1
+        return new_data
         
 # def is_valid_equation(equation):
 #     try:
@@ -64,47 +95,52 @@ def custom_sorting(data):
 #         return True
 #     except SyntaxError:
 #         return False
-        
 
-def format_and_parse_expressions(expression_string):
-        expression_string = expression_string.strip()
-        if expression_string.startswith('[') and expression_string.endswith(']'):
-            expression_string = expression_string[1:-1].strip()
+def movavg(x_val_list, k):
+    if len(x_val_list) < k:
+        return sum(x_val_list) / len(x_val_list)
+    return sum(x_val_list[-k:]) / k
 
+def format_and_parse_expressions(expression_string: str):
+    expression_string = expression_string.strip()
+
+    # Remove wrapping brackets if present
+    if expression_string.startswith('[') and expression_string.endswith(']'):
+        expression_string = expression_string[1:-1].strip()
+
+    parsed_expressions = []
+
+    # Case 1: Try JSON-style list parsing first (if expressions are quoted)
+    try:
+        json_compatible = "[" + expression_string + "]"
+        expressions = json.loads(json_compatible)
+        lines = [str(e).strip() for e in expressions]
+    except:
+        # Case 2: If not JSON, try line-by-line parsing
         if '\n' in expression_string:
             lines = [line.strip() for line in expression_string.split('\n') if line.strip()]
         else:
-            lines = [line.strip() for line in expression_string.split(',') if line.strip()]
+            # As last resort, split using semicolons (preferred over commas)
+            lines = [line.strip() for line in expression_string.split(';') if line.strip()]
 
-        parsed_expressions = []
+    for line in lines:
+        # Remove leading numbers (like '1.', '2.') and parentheses
+        line = re.sub(r'^\d+\.\s*', '', line).strip()
+        line = re.sub(r'^\\\(|\\\)$', '', line).strip()
+        line = line.strip('"').strip("'").rstrip(',')
 
-        for line in lines:
-            # Remove leading numbers (like '1.', '2.') from the line
-            line = re.sub(r'^\d+\.\s*', '', line).strip()
+        # Convert symbolic constants to Pythonic notation: c_0 → c[0], c_{1} → c[1]
+        line = re.sub(r'c_\{(\d+)\}', r'c[\1]', line)
+        line = re.sub(r'c_(\d+)', r'c[\1]', line)
 
-            # Remove '\\(' and '\\)' from the start and end of the line
-            line = re.sub(r'^\\\(|\\\)$', '', line).strip()
-            
-            line = line.strip('"').strip('\'').strip('"')
+        # Clean up input variable notation: x_1 → x1
+        line = re.sub(r'([a-zA-Z])_(\d+)', r'\1\2', line)
+        line = re.sub(r'x\d+_\((\d+)\)', r'x\1', line)
 
-            line = line.strip().strip('"').strip('\'').strip('"').strip()
-            line = line.rstrip(',').strip('"').strip('\'').strip('"')
-            if not line:
-                continue
-
-            # Replace c_{0}, c_0, c_{1}, c_1, etc. with c[0], c[1], etc.
-            line = re.sub(r'c_\{(\d+)\}', r'c[\1]', line)  # Handle c_{0} notation
-            line = re.sub(r'c_(\d+)', r'c[\1]', line)      # Handle c_0 notation
-
-            # Handle x1_1, x2_2, x_1, x_2, etc. by converting them to x1, x2, etc.
-            line = re.sub(r'([a-zA-Z])_(\d+)', r'\1\2', line)  # Replace x1_1 with x1, x_1 with x1, etc.
-
-            # Replace xi_(j) with xj, regardless of the value of i
-            line = re.sub(r'x\d+_\((\d+)\)', r'x\1', line)  # Handle xi_(j) -> xj
-
+        if line:
             parsed_expressions.append(line)
 
-        return parsed_expressions
+    return parsed_expressions
 
 
 def format_expressions(expressions):
@@ -151,67 +187,36 @@ def format_expressions(expressions):
         formula = re.sub(r"(\d)([a-zA-Z\(])", r"\1*\2", formula)  # Add * between number and variable/parenthesis
         formula = re.sub(r"(\))([a-zA-Z\(])", r"\1*\2", formula)  # Add * between closing parenthesis and variable/parenthesis
         formula = re.sub(r"(c\[\d+\])([a-zA-Z\(])", r"\1*\2", formula)  # Add * between c[i] and opening parenthesis
+        
+        # Rewrite movavg expressions
+        formula = re.sub(r'movavg\(x(\d+),\s*(\d+)\)', r'movavg(\1, \2)', formula)
 
         formatted_expressions.append(formula)
 
     return formatted_expressions
 
 
-def format_and_parse_expression_matrix(expression_matrix_string):
-    # 检查输入是否是 Python 二维列表形式
+def format_and_parse_expression_matrix(expression_matrix_string: str) -> List[List[str]]:
+    # Step 1: 清洗 Markdown 包裹
+    expression_matrix_string = expression_matrix_string.strip()
+    if expression_matrix_string.startswith("```"):
+        expression_matrix_string = re.sub(r"^```[a-zA-Z]*\n?", "", expression_matrix_string)
+        expression_matrix_string = re.sub(r"```$", "", expression_matrix_string.strip())
+
+    # Step 2: 替换转义字符，恢复为多行文本
+    expression_matrix_string = expression_matrix_string.encode().decode('unicode_escape')
+
+    # Step 3: 使用 ast.literal_eval 解析成嵌套列表（更安全替代 eval）
     try:
-        parsed_matrix = eval(expression_matrix_string)
+        parsed_matrix = ast.literal_eval(expression_matrix_string)
         if isinstance(parsed_matrix, list) and all(isinstance(row, list) for row in parsed_matrix):
-            # 如果是有效的二维列表，直接格式化每个公式
             formatted_matrix = []
             for row in parsed_matrix:
                 formatted_row = []
-                for expression in row:
-                    formatted_row.extend(format_and_parse_expressions(expression))
+                for expr in row:
+                    if isinstance(expr, str):
+                        formatted_row.extend(format_and_parse_expressions(expr))
                 formatted_matrix.append(formatted_row)
             return formatted_matrix
-    except Exception:
-        pass  # 如果解析失败，继续处理为 LaTeX 格式
-
-    # 处理 LaTeX 格式的公式矩阵
-    expression_matrix_string = re.sub(r'\\begin\{[a-zA-Z\*]*\}|\s*\\end\{[a-zA-Z\*]*\}', '', expression_matrix_string)  # 删除 \begin 和 \end
-    expression_matrix_string = re.sub(r'\\\\', '\n', expression_matrix_string)  # 将 \\ 替换为换行符
-    expression_matrix_string = expression_matrix_string.strip()
-
-    # 替换Latex中括号为Python列表样式
-    expression_matrix_string = expression_matrix_string.replace(r'\[', '[').replace(r'\]', ']')
-    expression_matrix_string = expression_matrix_string.replace(r'\\[', '[').replace(r'\\]', ']')
-
-    # 按行分割公式
-    lines = [line.strip() for line in expression_matrix_string.split('\n') if line.strip()]
-
-    # 提取公式部分，按 Pattern 分组
-    expression_matrix = []
-    current_row = []
-    for line in lines:
-        if '\\text{' in line and 'pattern' in line.lower():  # 检测包含 Pattern 的行
-            if current_row:
-                expression_matrix.append(current_row)
-            current_row = []
-        elif '=' in line:  # 仅保留包含等号的行
-            if '&' in line:  # 处理 align 环境中的公式
-                line = line.split('&')[-1].strip()  # 取 & 后的部分
-            current_row.append(line)
-    if current_row:  # 添加最后一行
-        expression_matrix.append(current_row)
-
-    # 删除 \text{...} 内容
-    expression_matrix = [
-        [re.sub(r'\\text\{[^}]*\}', '', expression).strip() for expression in row]
-        for row in expression_matrix
-    ]
-
-    # 格式化每个公式
-    formatted_matrix = []
-    for row in expression_matrix:
-        formatted_row = []
-        for expression in row:
-            formatted_row.extend(format_and_parse_expressions(expression))
-        formatted_matrix.append(formatted_row)
-
-    return formatted_matrix
+    except Exception as e:
+        raise ValueError(f"Failed to parse expression matrix string: {e}")

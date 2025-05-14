@@ -2,7 +2,7 @@ import numpy as np
 import re
 import json
 from scipy import optimize as opt
-from helper import calculate_complexity
+from helper import calculate_complexity, movavg
 
 
 class FittingOptimizerAirFog:
@@ -16,8 +16,9 @@ class FittingOptimizerAirFog:
     def equation_error(self, c, equation, data):
         num_indep_vars = data.shape[1] - 1
         x = data[:, :num_indep_vars]
+        y = data[:, num_indep_vars]
         
-        return np.mean(np.abs(eval(equation, {'c': c, 'np': np, 'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, **{f'x{i+1}': x[:, i] for i in range(num_indep_vars)}}) - data[:, num_indep_vars]))
+        return np.mean(np.abs(eval(equation, {'c': c, 'np': np, 'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x[:j+1, i-1].reshape(-1), k) for j in range(len(x))]), **{f'x{i+1}': x[:, i] for i in range(num_indep_vars)}}) - y)) / (np.max(y) - np.min(y))
 
     def is_valid_equation(self, equation, data, c):
         try:
@@ -37,7 +38,7 @@ class FittingOptimizerAirFog:
             # 检查是否可以执行
             num_indep_vars = data.shape[1] - 1
             x = data[:, :num_indep_vars]
-            eval(equation, {'c': c, 'np': np, 'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, **{f'x{i+1}':x[:,i].reshape(-1) for i in range(num_indep_vars)}})
+            eval(equation, {'c': c, 'np': np, 'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x[:j+1, i-1].reshape(-1), k) for j in range(len(x))]), **{f'x{i+1}':x[:,i].reshape(-1) for i in range(num_indep_vars)}})
             return True
         except Exception as e:
             print(f"Invalid equation: {equation}. Error: {e}")
@@ -55,18 +56,18 @@ class FittingOptimizerAirFog:
             equation_indices = self.get_equation_indices(equation)
             initial_val = [1] * len(equation_indices)
             if not self.is_valid_equation(equation, data, initial_val):
-                result_dict = {'equation': equation, 'complexity': calculate_complexity(equation), 'mae': float('inf')}
+                result_dict = {'equation': equation, 'complexity': calculate_complexity(equation), 'nmae': float('inf')}
                 results.append(result_dict)
                 continue
             try:
                 result = opt.basinhopping(func=self.equation_error, x0=initial_val,
                                           minimizer_kwargs={"method": "Nelder-Mead", "args": (equation, data)})
                 fitted_params = result.x
-                mae = self.equation_error(fitted_params, equation, data)
+                nmae = self.equation_error(fitted_params, equation, data)
                 complexity = calculate_complexity(equation)
-                results.append({'equation': equation, 'complexity': complexity, 'mae': mae, 'fitted_params': fitted_params.tolist()})
+                results.append({'equation': equation, 'complexity': complexity, 'nmae': nmae, 'fitted_params': fitted_params.tolist()})
             except Exception as e:
-                results.append({'equation': equation, 'complexity': float('inf'), 'mae': float('inf'), 'fitted_params': []})
+                results.append({'equation': equation, 'complexity': float('inf'), 'nmae': float('inf'), 'fitted_params': []})
         
-        results.sort(key=lambda x: (x['mae'], x['complexity']))
+        results.sort(key=lambda x: (x['nmae'], x['complexity']))
         return results

@@ -12,12 +12,12 @@ def extract_best_formulas(json_path: str, save_path: str = "predict_model.json")
         final_results = json.load(f)
 
     # 从 JSON 文件中提取公式列表
-    assert len(final_results) >= 4, "需要找到 4 个表达式列表（Pattern 1~4）"
+    assert len(final_results) >= 3, "需要找到 3 个表达式列表（Pattern 1~3）"
 
     result = {}
 
-    for i, equations in enumerate(final_results[:4]):  # 只取前 4 个 pattern
-        best = sorted([e for e in equations if isinstance(e["mae"], (float, int))], key=lambda x: x["mae"])[0]
+    for i, equations in enumerate(final_results[:3]):  # 只取前 3 个 pattern
+        best = sorted([e for e in equations if isinstance(e["nmae"], (float, int))], key=lambda x: x["nmae"])[0]
         result[f"pattern_{i+1}"] = {
             "equation": best["equation"],
             "fitted_params": best["fitted_params"]

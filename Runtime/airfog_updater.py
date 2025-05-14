@@ -1,7 +1,8 @@
 # airfog_updater.py
+import numpy as np
 from Prediction.fittingClass_airfog import FittingOptimizerAirFog
 from langchain.chains import LLMChain
-from Prediction.helper import format_and_parse_expressions, format_expressions, custom_sorting
+from Prediction.helper import format_and_parse_expressions, format_expressions, custom_sorting, movavg
 
 
 class AirFogRuntimeUpdater:
@@ -28,9 +29,9 @@ class AirFogRuntimeUpdater:
         self.current_mae = None
 
     def predict(self, x_input: list) -> float:
-        local_vars = {f'c{i}': self.params[i] for i in range(len(self.params))}
-        local_vars.update({f'x{j+1}': x_input[j] for j in range(len(x_input))})
-        return eval(self.expr_template, {}, local_vars)
+        global_vars = {'np': np, 'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x_input[i-1, :j+1], k) for j in range(len(x_input[i-1]))])}
+        local_vars = {'c': self.params, **{f'x{j+1}': x_input[j] for j in range(len(x_input))}}
+        return eval(self.expr_template, global_vars, local_vars)
 
     def update_with_feedback(self, x_input: list, y_true: float):
         self.history_X.append(x_input)
@@ -83,5 +84,5 @@ class AirFogRuntimeUpdater:
         best = custom_sorting(new_results)[-1]
         self.expr_template = best["equation"]
         self.params = best["fitted_params"]
-        print(f"Updated expression for Pattern {self.pattern_id+1}: {self.expr_template} (MAE={best['mae']:.4f})")
+        print(f"Updated expression for Pattern {self.pattern_id+1}: {self.expr_template} (NMAE={best['nmae']:.4f})")
 
