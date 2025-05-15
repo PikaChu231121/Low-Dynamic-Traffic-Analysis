@@ -78,18 +78,20 @@ class airFog:
         
         LLMrawExpressions.append(startupEquationsStr)
         self.all_LLMthoughts.append(LLMithoughts)
-
+        
+        valid_startupEquations = []
         for i in range(3):
             # Format and parse the nested list of equations
             formatted_equations = format_expressions(startupEquations[i] if i < len(startupEquations) else [])
             self.all_expressions[i].extend(formatted_equations)
             startup_equation_analysis = self.optimizer.fitting_constants(
                 self.indep_vars[i], self.dep_vars[i], formatted_equations)
-            self.results_list[i].extend(startup_equation_analysis)
+            # Prune the results whose nmae > 1
+            valid_startupEquations.append([analysis for analysis in startup_equation_analysis if analysis['nmae'] < 1])
         
-        # 绘制初始轮生成的公式的曲线图
-        self.plot_predictions(self.indep_vars, self.dep_vars, [results[-3:] for results in self.results_list])
-        self.results_list = [custom_sorting(results) for results in self.results_list]
+        # Plot the initial results
+        self.plot_predictions(self.indep_vars, self.dep_vars, valid_startupEquations)
+        self.results_list = [custom_sorting(results + valid_startupEquations[i]) for i, results in enumerate(self.results_list)]
 
         print(f"Iteration:" "Seed")
         print("SciPy feedback used for this iteration:")
@@ -136,17 +138,19 @@ class airFog:
             LLMrawExpressions.append(IterEquationsStr)
             self.all_LLMthoughts.append(LLMthoughts)
 
+            valid_iterEquations = []
             for i in range(3):
                 # Format and parse the nested list of equations
                 formatted_equations = format_expressions(IterEquations[i] if i < len(IterEquations) else [])
                 self.all_expressions[i].extend(formatted_equations)
                 iter_equation_analysis = self.optimizer.fitting_constants(
                     self.indep_vars[i], self.dep_vars[i], formatted_equations)
-                self.results_list[i].extend(iter_equation_analysis)
+                # Prune the results whose nmae > 1
+                valid_iterEquations.append([analysis for analysis in iter_equation_analysis if analysis['nmae'] < 1])
 
-            # 绘制每轮生成的公式的曲线图
-            self.plot_predictions(self.indep_vars, self.dep_vars, [results[-3:] for results in self.results_list], iter_num)
-            self.results_list = [custom_sorting(results) for results in self.results_list]
+            # Plot the results
+            self.plot_predictions(self.indep_vars, self.dep_vars, valid_iterEquations, iter_num)
+            self.results_list = [custom_sorting(results + valid_iterEquations[i]) for i, results in enumerate(self.results_list)]
             
             print(f"Iteration:{iter_num+1}")
             print("SciPy feedback used for this iteration:")
@@ -165,7 +169,6 @@ class airFog:
                 'New equations generated': IterEquationsStr
             })
 
-        # 在 run 方法结束前调用可视化
         self.visualize_results(self.results_list)
 
         return self.results_list, self.all_expressions, self.iteration_info, self.usage_list, total_chain_run_time, LLMrawExpressions
@@ -222,7 +225,7 @@ class airFog:
         :param params: 拟合参数列表
         :return: 预测值列表
         """
-        global_vars = {'c': params, 'np': np, 'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(indep_vars[i-1, :j+1], k) for j in range(len(indep_vars[i-1]))]), **{f'x{i+1}': indep_vars[i] for i in range(len(indep_vars))}}
+        global_vars = {'c': params, 'np': np, 'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(indep_vars[i-1][:j+1], k) for j in range(len(indep_vars[i-1]))]), **{f'x{i+1}': indep_vars[i] for i in range(len(indep_vars))}}
         local_vars = {f'x{i+1}': indep_vars_i for i, indep_vars_i in enumerate(indep_vars)}
         
         try:
@@ -235,11 +238,12 @@ class airFog:
         """
         绘制每轮生成的公式的曲线图，包含 3 个子图，每个子图对应一个 pattern
         """
-        fig, axes = plt.subplots(1, len(equations_list), figsize=(15, 10))
-        axes = axes.flatten()
+        num_patterns = len(equations_list)
+        fig, axes = plt.subplots(num_patterns, 1, figsize=(12, 6 * num_patterns))  # 调整子图大小
+        if num_patterns == 1:
+            axes = [axes]  # 确保 axes 是可迭代的
 
-        for i in range(3):
-            ax = axes[i]
+        for i, ax in enumerate(axes):
             dep_var = dep_vars_list[i]
             indep_vars = indep_vars_list[i]
             equations = equations_list[i]
@@ -259,14 +263,14 @@ class airFog:
                 except Exception as e:
                     print(f"Error in plotting predictions for equation {eq_idx+1} in pattern {i+1}: {e}")
 
-            ax.set_title(f"Pattern {i+1} - Iteration {iteration+1 if iteration is not None else 'Seed'}")
-            ax.set_xlabel("Data Index")
-            ax.set_ylabel("y Value")
-            ax.legend()
+            ax.set_title(f"Pattern {i+1} - Iteration {iteration+1 if iteration is not None else 'Seed'}", fontsize=14)
+            ax.set_xlabel("Data Index", fontsize=12)
+            ax.set_ylabel("y Value", fontsize=12)
+            ax.legend(fontsize=10)
             ax.grid(True)
 
         plt.tight_layout()
-        plt.suptitle(f"Predictions for Iteration {iteration+1 if iteration is not None else 'Seed'}", fontsize=16, y=1.02)
+        plt.suptitle(f"Predictions for Iteration {iteration+1 if iteration is not None else 'Seed'}", fontsize=18, y=1.02)
         plt.show()
 
     def cost(self):

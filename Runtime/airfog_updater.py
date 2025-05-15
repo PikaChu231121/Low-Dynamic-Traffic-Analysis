@@ -29,7 +29,7 @@ class AirFogRuntimeUpdater:
         self.current_mae = None
 
     def predict(self, x_input: list) -> float:
-        global_vars = {'np': np, 'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x_input[i-1, :j+1], k) for j in range(len(x_input[i-1]))])}
+        global_vars = {'np': np, 'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x_input[i-1][:j+1], k) for j in range(len(x_input[i-1]))])}
         local_vars = {'c': self.params, **{f'x{j+1}': x_input[j] for j in range(len(x_input))}}
         return eval(self.expr_template, global_vars, local_vars)
 

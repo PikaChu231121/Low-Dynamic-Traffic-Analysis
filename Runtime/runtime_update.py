@@ -9,10 +9,7 @@ with open("predict_model.json", "r") as f:
     model_data = json.load(f)
 
 # 你用于训练的原始输入输出（airFogSim生成）
-indep_vars_all, dep_vars_all = load_data(
-    data_path='../AirFogSim/output/global_data.csv', 
-    context_path='../AirFogSim/output/context_summary.json'
-)
+indep_vars_all, dep_vars_all = load_data('../AirFogSim/output/global_data.csv')
 
 optimizer = FittingOptimizerAirFog()
 

@@ -142,7 +142,6 @@ def format_and_parse_expressions(expression_string: str):
 
     return parsed_expressions
 
-
 def format_expressions(expressions):
     formatted_expressions = []
 
@@ -161,8 +160,8 @@ def format_expressions(expressions):
         formula = re.sub(r"\\sqrt\{([^}]+)\}", r"(\1)**0.5", formula)  # Replace \sqrt{content} with content**0.5
         formula = re.sub(r"\\cbrt\{([^}]+)\}", r"(\1)**(1/3)", formula)  # Replace \cbrt{content} with content**(1/3)
         formula = formula.replace(r"cube\_root", "**(1/3)")
-        formula = formula.replace(r"\log", "log").replace(r"\exp", "exp")
-        formula = formula.replace(r"\\log", "log").replace(r"\\exp", "exp")
+        formula = formula.replace(r"\log", "log").replace(r"\exp", "exp").replace(r"\min", "min").replace(r"\max", "max")
+        formula = formula.replace(r"\\log", "log").replace(r"\\exp", "exp").replace(r"\\min", "min").replace(r"\\max", "max")
         formula = formula.replace(r"log10", "log")
         formula = re.sub(r'cube_root\(([^)]+)\)', r'\1**(1/3)', formula)
         formula = re.sub(r'cubert\(([^)]+)\)', r'\1**(1/3)', formula)
@@ -189,34 +188,115 @@ def format_expressions(expressions):
         formula = re.sub(r"(c\[\d+\])([a-zA-Z\(])", r"\1*\2", formula)  # Add * between c[i] and opening parenthesis
         
         # Rewrite movavg expressions
+        formula = formula.replace(r"\movavg", "movavg").replace(r"\\movavg", "movavg")
         formula = re.sub(r'movavg\(x(\d+),\s*(\d+)\)', r'movavg(\1, \2)', formula)
 
         formatted_expressions.append(formula)
 
     return formatted_expressions
 
-
-def format_and_parse_expression_matrix(expression_matrix_string: str) -> List[List[str]]:
-    # Step 1: 清洗 Markdown 包裹
+def format_and_parse_expression_matrix(expression_matrix_string: str):
     expression_matrix_string = expression_matrix_string.strip()
+
+    # 清除 Markdown 包裹
     if expression_matrix_string.startswith("```"):
         expression_matrix_string = re.sub(r"^```[a-zA-Z]*\n?", "", expression_matrix_string)
         expression_matrix_string = re.sub(r"```$", "", expression_matrix_string.strip())
 
-    # Step 2: 替换转义字符，恢复为多行文本
-    expression_matrix_string = expression_matrix_string.encode().decode('unicode_escape')
+    # 判断是否为 LaTeX array 结构
+    if r'\begin{array}' in expression_matrix_string:
+        return extract_latex_arrays(expression_matrix_string)
+    
+    # 判断是否为 LaTeX bmatrix 结构
+    if r'\begin{bmatrix}' in expression_matrix_string:
+        return extract_latex_bmatrix(expression_matrix_string)
+    
+    # 判断是否为 LaTeX align 结构
+    if r'\begin{align' in expression_matrix_string:
+        return extract_latex_align_patterns(expression_matrix_string)
 
-    # Step 3: 使用 ast.literal_eval 解析成嵌套列表（更安全替代 eval）
+    # 尝试解析为 JSON / Python 格式
     try:
-        parsed_matrix = ast.literal_eval(expression_matrix_string)
-        if isinstance(parsed_matrix, list) and all(isinstance(row, list) for row in parsed_matrix):
-            formatted_matrix = []
-            for row in parsed_matrix:
-                formatted_row = []
-                for expr in row:
-                    if isinstance(expr, str):
-                        formatted_row.extend(format_and_parse_expressions(expr))
-                formatted_matrix.append(formatted_row)
-            return formatted_matrix
-    except Exception as e:
-        raise ValueError(f"Failed to parse expression matrix string: {e}")
+        parsed = ast.literal_eval(expression_matrix_string)
+        if isinstance(parsed, list) and all(isinstance(row, list) for row in parsed):
+            return [
+                [parsed_expr for expr in row for parsed_expr in format_and_parse_expressions(expr)]
+                for row in parsed
+            ]
+    except Exception:
+        pass
+
+    raise ValueError("Unsupported expression format")
+
+def extract_latex_arrays(expr_str: str) -> List[List[str]]:
+    expr_str = expr_str.strip()
+
+    # 替换 LaTeX 换行符为真实换行
+    expr_str = expr_str.replace('\\\\', '\n')
+
+    # 匹配每个 \begin{array} ... \end{array}
+    array_blocks = re.findall(
+        r'\\left\[\s*\\begin\{array\}\{[lcr]+\}(.*?)\\end\{array\}\s*\\right\]',
+        expr_str,
+        re.DOTALL
+    )
+
+    matrix = []
+    for block in array_blocks:
+        parsed_row = format_and_parse_expressions(block)
+        matrix.append(parsed_row)
+
+    return matrix
+
+def extract_latex_bmatrix(expr_str: str) -> List[List[str]]:
+    expr_str = expr_str.strip()
+
+    # 清洗多余 LaTeX 包裹
+    expr_str = expr_str.replace('\\\\', '\n')
+    expr_str = expr_str.replace(r'\,', ',')  # 恢复逗号
+    expr_str = re.sub(r'\\begin\{bmatrix\}|\s*\\end\{bmatrix\}', '', expr_str)
+    expr_str = re.sub(r'\\\[|\\\]', '', expr_str)
+
+    # 匹配每行：包含 Pattern N 与 \left[ ... \right]
+    rows = re.findall(r'\\text\{Pattern\s+\d+:[^}]*\}\s*&\s*\\left\[([^\]]+)\\right\]', expr_str, re.DOTALL)
+
+    matrix = []
+    for row in rows:
+        expressions = []
+        # 提取每个 \text{"..."} 内容
+        raw_items = re.findall(r'\\text\{"([^"]+)"\}', row)
+        expressions = format_and_parse_expressions(str(raw_items).replace('\\\\', '\\'))
+        matrix.append(expressions)
+
+    return matrix
+
+def extract_latex_align_patterns(expr_str: str) -> List[List[str]]:
+    expr_str = expr_str.strip()
+
+    # 清洗换行符等
+    expr_str = expr_str.replace('\\\\', '\n')
+    expr_str = expr_str.replace(r'\,', ',')  # LaTeX spacing comma
+
+    # 替换 \frac{a}{b} → (a)/(b)
+    expr_str = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'(\1) / (\2)', expr_str)
+
+    # 匹配每个 Pattern 组
+    pattern_blocks = re.split(r'\\text\{Pattern\s+\d+:}', expr_str)
+    patterns = []
+
+    for block in pattern_blocks:
+        if not block.strip():
+            continue
+        lines = [line.strip() for line in block.split('\n') if line.strip()]
+        row = []
+
+        for line in lines:
+            # 提取 `y = ...` 右边内容
+            match = re.match(r'&\s*y\d+\s*=\s*(.+)', line)
+            if match:
+                expr = match.group(1).strip().rstrip(';').strip()
+                row.extend(format_and_parse_expressions(expr))
+        if row:
+            patterns.append(row)
+
+    return patterns
