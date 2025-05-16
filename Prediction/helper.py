@@ -48,7 +48,7 @@ def calculate_normalized_mae(equation, data, fitted_params):
     if np.isscalar(predicted_y):
         predicted_y = np.full(y.shape, predicted_y)
     mae = mean_absolute_error(y, predicted_y)
-    normalized_mae = mae / (np.std(y))
+    normalized_mae = mae / (y.max() - y.min())
     return round(normalized_mae, 8)
 
 def calculate_complexity(equation):
