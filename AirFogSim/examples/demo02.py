@@ -47,6 +47,17 @@ RewardScheduler.setModel(env, 'REWARD', '1/max(1e-3, task_delay)')
 # 创建数据收集器
 data_collector = DataCollector()
 
+# 添加特定区域监控（例如交叉路口）
+junctions = env.traffic_manager.getAllJunctionPositions()
+if junctions:
+    for i, junction in enumerate(junctions[:3]):  # 只监控前3个交叉路口
+        # 在交叉路口周围创建监控区域
+        area_bounds = [
+            junction[0] - 200, junction[1] - 200,  # min_x, min_y
+            junction[0] + 200, junction[1] + 200   # max_x, max_y
+        ]
+        data_collector.area_specific_data[f'junction_{i}'] = area_bounds
+
 # 模拟执行
 accumulated_reward = 0
 
@@ -75,15 +86,16 @@ env.close()
 
 print("\nSimulation done.")
 
-# ==== 新增：公式预测与实际对比 ====
-formula_json_path = os.path.join(os.path.dirname(__file__), '../input/formula_mae.json')
-output_plot_path = os.path.join(os.path.dirname(__file__), '../output/formula_vs_actual.png')
-output_error_path = os.path.join(os.path.dirname(__file__), '../output/formula_vs_actual_error.csv')
-os.makedirs(os.path.dirname(output_plot_path), exist_ok=True)
+# ==== 新增：批量测试多个实验结果 ====
+output_json_path = os.path.join(os.path.dirname(__file__), '../output/all_runs_nmae.json')
+os.makedirs(os.path.dirname(output_json_path), exist_ok=True)
+formula_json_paths = [
+    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run1.json'),
+    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run2.json'),
+    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run3.json'),
+]
 data_collector.predict_and_compare_metrics(
-    formula_json_path=formula_json_path,
-    output_plot_path=output_plot_path,
-    output_error_path=output_error_path
+    formula_json_paths=formula_json_paths,
+    output_json_path=output_json_path
 )
-print(f"公式预测与实际对比图已保存到: {output_plot_path}")
-print(f"平均误差文件已保存到: {output_error_path}")
+print(f"所有实验的NMAE结果已保存到: {output_json_path}")
