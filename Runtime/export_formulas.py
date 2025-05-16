@@ -1,7 +1,7 @@
 import json
 import os
 
-def extract_best_formulas(json_path: str, save_path: str = "predict_model.json"):
+def extract_best_formulas(json_path: str, save_path: str = "predict_model.json", n: int = 3) -> None:
     # 检查文件路径和格式
     if not json_path.endswith('.json'):
         raise ValueError(f"Invalid input file: {json_path}. Expected a JSON file.")
@@ -17,11 +17,11 @@ def extract_best_formulas(json_path: str, save_path: str = "predict_model.json")
     result = {}
 
     for i, equations in enumerate(final_results[:3]):  # 只取前 3 个 pattern
-        best = sorted([e for e in equations if isinstance(e["nmae"], (float, int))], key=lambda x: x["nmae"])[0]
-        result[f"pattern_{i+1}"] = {
+        bests = sorted([e for e in equations if isinstance(e["nmae"], (float, int))], key=lambda x: x["nmae"])[:n]
+        result[f"pattern_{i+1}"] = [{
             "equation": best["equation"],
             "fitted_params": best["fitted_params"]
-        }
+        } for best in bests]
 
     with open(save_path, "w") as f:
         json.dump(result, f, indent=2)

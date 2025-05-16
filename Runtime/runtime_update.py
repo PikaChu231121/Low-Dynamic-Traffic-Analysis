@@ -1,31 +1,36 @@
 import json
 from airfog_updater import AirFogRuntimeUpdater
 from build_runtime_llm_chain import build_runtime_llm_chain
+from export_formulas import extract_best_formulas
 from Prediction.fittingClass_airfog import FittingOptimizerAirFog
 from Prediction.load_data import load_data
+
+# 导出最优表达式
+extract_best_formulas("../AirFogSim/output/test_results.json")
 
 # 加载导出的表达式
 with open("predict_model.json", "r") as f:
     model_data = json.load(f)
 
-# 你用于训练的原始输入输出（airFogSim生成）
-indep_vars_all, dep_vars_all = load_data('../AirFogSim/output/global_data.csv')
+# 用于训练的原始输入输出（airFogSim生成）
+indep_vars_train, dep_vars_train = load_data('../AirFogSim/output/global_data.csv')
 
 optimizer = FittingOptimizerAirFog()
 
-# 初始化 4 个模式的 updater
+# 初始化 3 个模式的 updater
 updaters = []
-for i in range(4):
+for i in range(3):
     pat_key = f"pattern_{i+1}"
     updater = AirFogRuntimeUpdater(
         pattern_id=i,
-        expr_str=model_data[pat_key]["equation"],
-        fitted_params=model_data[pat_key]["fitted_params"],
+        exprs=[eq["equation"] for eq in model_data[pat_key]],
+        fitted_params=[eq["fitted_params"] for eq in model_data[pat_key]],
         optimizer=optimizer,
         llm_chain=build_runtime_llm_chain(i),
-        indep_vars_all=indep_vars_all,
-        dep_vars_all=dep_vars_all,
-        error_threshold=0.03
+        indep_vars=indep_vars_train,
+        dep_vars=dep_vars_train,
+        error_threshold=0.15,
+        n_cached_expressions=len(model_data[pat_key]),
     )
     updaters.append(updater)
 
