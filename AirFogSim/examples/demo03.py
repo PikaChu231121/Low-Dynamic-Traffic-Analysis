@@ -105,7 +105,7 @@ timestamps = [[] for _ in range(3)]
 # 模拟执行
 accumulated_reward = 0
 last_values = {}  # 存储上一次的数据值
-update_interval = 1.0  # 每隔多少个时间单位更新一次模型
+update_interval = 5.0  # 每隔多少个时间单位更新一次模型
 
 while not env.isDone():
     # 记录任务信息
@@ -142,7 +142,7 @@ while not env.isDone():
                 for name in indep_names:
                     if name in data_collector.data and data_collector.data[name]: # 检查列表是否存在且不为空
                         value = data_collector.data[name][-1] # 获取最新的值
-                        if value is None:
+                        if value is None or (isinstance(value, float) and np.isnan(value)):
                             print(f"警告: 模式 {pattern_id} 的输入 '{name}' 在时间 {env.simulation_time:.2f} 为 None。跳过此更新。")
                             valid_inputs = False
                             break
@@ -195,18 +195,18 @@ import matplotlib.pyplot as plt
 for pattern_id in range(3):
     if len(predictions[pattern_id]) > 0:
         plt.figure(figsize=(10, 6))
-        plt.plot(timestamps[pattern_id], predictions[pattern_id], 'r-', label='预测')
+        plt.plot(timestamps[pattern_id], predictions[pattern_id], 'r-', label='prediction')
         
         if len(actuals[pattern_id]) > 0:
-            plt.plot(timestamps[pattern_id][:len(actuals[pattern_id])], actuals[pattern_id], 'b-', label='实际')
+            plt.plot(timestamps[pattern_id][:len(actuals[pattern_id])], actuals[pattern_id], 'b-', label='actual')
             
             # 计算平均误差
             avg_error = np.mean(errors[pattern_id])
-            plt.title(f'模式{pattern_id+1} - {dep_var_map[pattern_id]}预测 (平均误差: {avg_error:.4f})')
+            plt.title(f'pattern{pattern_id+1} - {dep_var_map[pattern_id]}prediction (avg_error: {avg_error:.4f})')
         else:
-            plt.title(f'模式{pattern_id+1} - {dep_var_map[pattern_id]}预测')
+            plt.title(f'pattern{pattern_id+1} - {dep_var_map[pattern_id]}prediction')
             
-        plt.xlabel('时间')
+        plt.xlabel('time')
         plt.ylabel(dep_var_map[pattern_id])
         plt.legend()
         plt.grid(True)
@@ -227,9 +227,9 @@ results = {
 }
 
 import json
-with open(os.path.join(airfogsim_root, 'output/runtime_predictions.json'), 'w') as f:
+with open(os.path.join(airfogsim_root, 'output/prediction/runtime_predictions.json'), 'w') as f:
     json.dump(results, f, indent=2)
 
 print("\nSimulation done.")
-print(f"预测结果已保存到 {os.path.join(airfogsim_root, 'output/runtime_predictions.json')}")
+print(f"预测结果已保存到 {os.path.join(airfogsim_root, 'output/prediction/runtime_predictions.json')}")
 print(f"预测图表已保存到 {os.path.join(airfogsim_root, 'output')} 目录")
