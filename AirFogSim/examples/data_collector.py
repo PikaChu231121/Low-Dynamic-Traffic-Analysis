@@ -335,7 +335,7 @@ class DataCollector:
         project_root = os.path.abspath(os.path.join(current_dir, '../../'))
         # 将 Prediction 目录添加到 Python 路径
         sys.path.append(os.path.join(project_root, 'Prediction'))
-        from helper import movavg
+        from Prediction.helper import movavg
 
         indep_var_map = [
             ['task_success_ratio', 'vehicle_density', 'uav_density', 'junction0_vehicle_count', 'junction1_vehicle_count', 'junction2_vehicle_count'],
@@ -394,10 +394,11 @@ class DataCollector:
                         local_vars['np'] = np
                         local_vars['min'] = np.minimum
                         local_vars['max'] = np.maximum
-                        local_vars['movavg'] = lambda arr, k: movavg(arr[:i+1], k)[-1] if len(arr[:i+1])>=k else np.mean(arr[:i+1])
+                        local_vars['movavg'] = lambda p, k: movavg(indep_vars[p-1][:i], k)
                         local_vars['log'] = np.log
                         local_vars['exp'] = np.exp
                         local_vars['sqrt'] = np.sqrt
+                        local_vars['cbrt'] = np.cbrt
                         try:
                             pred = eval(eq, {}, local_vars)
                         except Exception:
@@ -407,8 +408,15 @@ class DataCollector:
                     arr_actual = dep_var
                     mask = ~np.isnan(arr_pred)
                     if np.sum(mask) > 0:
-                        mae = mean_absolute_error(arr_actual[mask], arr_pred[mask])
-                        nmae = mae / (np.mean(np.abs(arr_actual[mask])) + 1e-8)
+                        # 使用 min-max 范围计算 NMAE
+                        actual_min = np.min(arr_actual[mask])
+                        actual_max = np.max(arr_actual[mask])
+                        actual_range = actual_max - actual_min
+                        if actual_range > 0:
+                            mae = mean_absolute_error(arr_actual[mask], arr_pred[mask])
+                            nmae = mae / actual_range
+                        else:
+                            nmae = float('inf')  # 如果范围为 0，则设置为无穷大
                     else:
                         nmae = float('inf')
                     # nmae为inf或nan时，写为None
