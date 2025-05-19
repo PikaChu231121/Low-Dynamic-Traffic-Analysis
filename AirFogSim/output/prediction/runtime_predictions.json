@@ -1,0 +1,27 @@
+{
+  "timestamps": [
+    [],
+    [],
+    []
+  ],
+  "predictions": [
+    [],
+    [],
+    []
+  ],
+  "actuals": [
+    [],
+    [],
+    []
+  ],
+  "errors": [
+    [],
+    [],
+    []
+  ],
+  "dep_vars": [
+    "compute_load_avg",
+    "avg_V2U_rate",
+    "task_success_ratio"
+  ]
+}

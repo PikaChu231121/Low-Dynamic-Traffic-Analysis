@@ -1,6 +1,6 @@
 # build_runtime_llm_chain.py
 
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 from langchain.schema import SystemMessage
 from langchain.chains import LLMChain

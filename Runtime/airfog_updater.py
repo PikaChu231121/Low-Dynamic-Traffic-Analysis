@@ -1,8 +1,8 @@
 # airfog_updater.py
 import numpy as np
-from Prediction.fittingClass_airfog import FittingOptimizerAirFog
+from fittingClass_airfog import FittingOptimizerAirFog  # type: ignore
 from langchain.chains import LLMChain
-from Prediction.helper import format_and_parse_expressions, format_expressions, custom_sorting, movavg
+from helper import format_and_parse_expressions, format_expressions, custom_sorting, movavg  # type: ignore
 from collections import deque
 
 
