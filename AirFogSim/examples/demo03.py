@@ -24,7 +24,7 @@ if runtime_path not in sys.path:
     sys.path.append(runtime_path)
 
 try:
-    from runtime_update import init_runtime_updaters, update_runtime_model  # type: ignore
+    from runtime_update import init_runtime_updaters  # type: ignore
     runtime_available = True
 except ImportError as e:
     print(f"警告: Runtime模块无法导入，运行时更新将被禁用 ({e})")
@@ -169,9 +169,20 @@ while not env.isDone():
                     # y_current 保持为 None
                 
                 # 更新模型并记录预测和误差
-                pred, error = update_runtime_model(updaters, pattern_id, x_current, y_current)
+                pred = None
+                error = float('nan')
+
+                if pattern_id < len(updaters):
+                    updater = updaters[pattern_id]
+                    if updater:
+                        pred = updater.record_prediction(x_current)
+
+                        if y_current is not None:
+                            updater.update_with_feedback(y_current)
+                            if pred is not None and not np.isnan(pred):
+                                error = abs(pred - y_current)
                 
-                if pred is not None:
+                if pred is not None and not np.isnan(pred):
                     predictions[pattern_id].append(pred)
                     timestamps[pattern_id].append(env.simulation_time)
                     
