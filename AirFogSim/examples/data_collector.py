@@ -335,7 +335,7 @@ class DataCollector:
         project_root = os.path.abspath(os.path.join(current_dir, '../../'))
         # 将 Prediction 目录添加到 Python 路径
         sys.path.append(os.path.join(project_root, 'Prediction'))
-        from Prediction.helper import movavg
+        from helper import movavg  # type: ignore
 
         indep_var_map = [
             ['task_success_ratio', 'vehicle_density', 'uav_density', 'junction0_vehicle_count', 'junction1_vehicle_count', 'junction2_vehicle_count'],

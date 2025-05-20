@@ -129,6 +129,8 @@ class AirFogRuntimeUpdater:
 
         self.top_equations = [{
             "equation": r["equation"],
+            "current_pred": None,  # Will be calculated on next predict() call
+            "current_mae": r["nmae"], # Use NMAE from fitting as the initial MAE for the cache
             "fitted_params": r["fitted_params"],
             "last_mae": float('inf')  # 重新初始化
         } for r in sorted_results]
