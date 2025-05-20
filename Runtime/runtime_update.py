@@ -34,9 +34,14 @@ for i in range(3):
     )
     updaters.append(updater)
 
-# 示例运行：每个时间片都传入新的 (x, y)
+# 示例运行：t 时间片都传入新的 x，t+1 时间片传入新的 y
 for t in range(10):
-    x = [...]        # 当前时间片输入（例如来自 AirFogSim）
-    y = ...          # 当前真实输出
     pattern_id = 2   # 例如 Pattern 3，对应 index=2
-    updaters[pattern_id].update_with_feedback(x, y)
+    
+    # t 时间片
+    x = [...]        # 当前时间片输入（例如来自 AirFogSim）
+    updaters[pattern_id].record_prediction(x)
+    
+    # t+1 时间片
+    y = ...          # 下一时间片真实输出
+    updaters[pattern_id].update_with_feedback(y)
