@@ -5,6 +5,8 @@ import numpy as np
 
 os.environ['OPENAI_API_KEY'] = 'sk-5T6oMdbJnNP23WEC5psT4I8sZyEd90Nve1YquVKdj9coHpIy'
 os.environ['OPENAI_API_BASE'] = 'https://api.chatanywhere.org/v1'
+# os.environ['http_proxy'] = 'http://127.0.0.1:7890'
+# os.environ['https_proxy'] = 'https://127.0.0.1:7890'
 
 # 把Prediction添加到系统路径
 current_dir = os.path.dirname(os.path.abspath(__file__))

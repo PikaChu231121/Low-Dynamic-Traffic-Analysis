@@ -99,7 +99,8 @@ class AirFogRuntimeUpdater:
 
     def retrain_expression(self):
         """ 使用历史数据 + LLM + optimizer 重建表达式 """
-        X = list(map(np.array, list(zip(*self.indep_vars)) + self.history_X))
+        X_matrix = np.array(list(zip(*self.indep_vars)) + self.history_X)
+        X = [X_matrix[:, i] for i in range(X_matrix.shape[1])]
         y = np.array(list(self.dep_vars) + self.history_y)
         current_eq = self.top_equations[self.best_expression_index]
 
@@ -108,8 +109,8 @@ class AirFogRuntimeUpdater:
             predicted=self.pending_prediction,
             actual=self.history_y[-1],
             mae=current_eq["last_mae"],
-            dep=np.array(y),
-            indep=[list(row) for row in X],
+            dep=y,
+            indep=X,
             Neq=5
         )
 
