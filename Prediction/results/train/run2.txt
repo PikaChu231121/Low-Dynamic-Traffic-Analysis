@@ -1,317 +1,183 @@
 Final Results:
 [
   {
-    "equation": "c[0]+log(1+c[1]*x1)+c[2]*x2+c[3]*x3**2+c[4]*x4+c[5]*x5+c[6]*x6",
-    "complexity": 30,
-    "nmae": 0.3028252641986604,
-    "fitted_params": [
-      -266.03896542185737,
-      0.781944443465824,
-      -0.0016289376776578621,
-      5.130739876214937,
-      -0.005351125974389614,
-      -0.0049383458077340275,
-      0.025114004067474688
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*log(x1)+c[2]*sqrt(x2)",
-    "complexity": 11,
-    "nmae": 0.14865905412221533,
-    "fitted_params": [
-      0.010169705811692409,
-      -0.015952502399480338,
-      -0.001871709697979258
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*x1**2+c[2]*x2**3",
-    "complexity": 13,
-    "nmae": 0.14831665507760491,
-    "fitted_params": [
-      0.026798814618936673,
-      -0.022343472319571536,
-      3.571294997658466e-06
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*sqrt(x1)+c[2]*x4*x5",
-    "complexity": 12,
-    "nmae": 0.14802350517819432,
-    "fitted_params": [
-      0.07934104178109698,
-      -0.0747299052195872,
-      0.00021708056975482256
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*x1**2+c[2]*x3+c[3]*(x4)**0.5",
-    "complexity": 17,
-    "nmae": 0.14527150152810384,
-    "fitted_params": [
-      1028.2469140383023,
-      -0.030864409117816086,
-      -142.93119348129906,
-      0.002841555894180334
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*x1**2+c[2]*x2**2+c[3]*x3+c[4]*x4+c[5]*x5+c[6]*x6",
-    "complexity": 29,
-    "nmae": 0.14330932908585023,
-    "fitted_params": [
-      7.452114442770438,
-      0.010747888373578755,
-      0.00032061323985500145,
-      -1.0351377245976416,
-      -0.0058528870728912375,
-      -0.004284570298828694,
-      0.009763933475994436
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*log(1+x1)+c[2]*x2**2+c[3]*x5",
-    "complexity": 18,
-    "nmae": 0.13928533117239653,
-    "fitted_params": [
-      0.053564422569126136,
-      -0.06994262306917728,
-      0.0002518191141493534,
-      -0.0019978171564111174
-    ]
-  },
-  {
-    "equation": "c[0]*exp(c[1]*x2+c[2]*x6)",
-    "complexity": 10,
-    "nmae": 0.13703889771196825,
-    "fitted_params": [
-      0.010897929990262272,
-      -0.13077865833641433,
-      0.6116666432464581
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*x1**2+c[2]*x5+c[3]*exp(x6)",
-    "complexity": 16,
-    "nmae": 0.1293147839105414,
-    "fitted_params": [
-      0.016318134580536964,
-      -0.00925237216733572,
-      -0.0012453018659842833,
-      0.0020995080641576904
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*x1+c[2]*x2+c[3]*x3+c[4]*x4+c[5]*x5+c[6]*x6",
-    "complexity": 25,
-    "nmae": 0.1269059325486002,
-    "fitted_params": [
-      -260.8558566562054,
-      -0.046555729108718885,
-      0.001816487087010954,
-      36.26814353846018,
-      -0.0002810090982235566,
-      -0.0023096217389114108,
-      0.006163239772762181
-    ]
-  }
-]
-[
-  {
-    "equation": "c[0]*x1**2+c[1]*x3",
-    "complexity": 9,
-    "nmae": 0.27156321644363485,
-    "fitted_params": [
-      0.06501257277092051,
-      152.41050929823882
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*x1*x3",
+    "equation": "(x2-x3)/(x1+c[0])",
     "complexity": 7,
-    "nmae": 0.12235447094824017,
+    "nmae": 0.2887263626860362,
     "fitted_params": [
-      2.511781718074211,
-      9.947774428121525
+      9.223372036854801e+17
     ]
   },
   {
-    "equation": "c[0]+c[1]*x1*x3+c[2]*x2",
-    "complexity": 11,
-    "nmae": 0.1223544709292506,
-    "fitted_params": [
-      -11.234284255461006,
-      9.947775558436213,
-      1.910828239731079
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*x1**2+c[2]*sqrt(x3)",
+    "equation": "(x2**2+log(x5+1))/(x1+c[0])",
     "complexity": 12,
-    "nmae": 0.10691556628146856,
+    "nmae": 0.2035286635314196,
     "fitted_params": [
-      2.1824186817106224,
-      0.023812526896149322,
-      1.9339253977722244
+      4412.2588811608
     ]
   },
   {
-    "equation": "c[0]+c[1]*x1+c[2]*x2**2+c[3]*x3",
-    "complexity": 15,
-    "nmae": 0.09644292675115308,
-    "fitted_params": [
-      994.1453531464758,
-      0.2341931392280731,
-      -19.176595529036668,
-      13.984921597138221
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*x1+c[2]*x2+c[3]*x3",
-    "complexity": 13,
-    "nmae": 0.09644292670818638,
-    "fitted_params": [
-      1199.785703687417,
-      0.23419314711227,
-      -166.537968435385,
-      13.984922017470932
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*sqrt(x1)+c[2]*x2",
+    "equation": "(log(x2+1)+x5)/(x1+c[0])",
     "complexity": 10,
-    "nmae": 0.09393870529246472,
+    "nmae": 0.2023618761333872,
     "fitted_params": [
-      1.2875101561623452,
-      0.9280286788406091,
-      -0.03551892672592981
+      786.1672127766282
     ]
   },
   {
-    "equation": "c[0]+c[1]*sqrt(x1)+c[2]*x2**2+c[3]*x3",
-    "complexity": 16,
-    "nmae": 0.09066453771443539,
-    "fitted_params": [
-      -1.578460413478614,
-      0.9005303557094622,
-      0.049592457285120115,
-      10.273459211608696
-    ]
-  },
-  {
-    "equation": "c[0]+c[1]*log(1+x1)+c[2]*x3**2",
+    "equation": "(x2**2+log(x4+x5+1))/(x1+c[0])",
     "complexity": 14,
-    "nmae": 0.08916839986615689,
+    "nmae": 0.2020987922198531,
     "fitted_params": [
-      1.0948683737917264,
-      1.0917359474654935,
-      335.85649754329114
+      4440.7977663146985
+    ]
+  },
+  {
+    "equation": "movavg(2, 3)/(x1+c[0])",
+    "complexity": 5,
+    "nmae": 0.1880508951376574,
+    "fitted_params": [
+      672.414400030458
+    ]
+  },
+  {
+    "equation": "log(x2+1)/(x1+c[0])",
+    "complexity": 8,
+    "nmae": 0.17416721200618068,
+    "fitted_params": [
+      225.53687226926456
+    ]
+  },
+  {
+    "equation": "((x2)**0.5+x4+x6)/(x1+c[0])",
+    "complexity": 11,
+    "nmae": 0.15639022693544963,
+    "fitted_params": [
+      388.361358780503
     ]
   }
 ]
 [
   {
-    "equation": "min(1,max(0,c[0]+c[1]*x1*x3))",
-    "complexity": 7,
-    "nmae": 0.09723812641516572,
+    "equation": "x1/(log(x3+1)+c[0])",
+    "complexity": 8,
+    "nmae": 0.21190490894432257,
     "fitted_params": [
-      0.9393987631150911,
-      0.11743481358963578
+      1.739449953908872
     ]
   },
   {
-    "equation": "1-exp(-c[0]-c[1]*x1**2)",
+    "equation": "(x1*x2)/(log(x3+1)+c[0])",
+    "complexity": 10,
+    "nmae": 0.2118498030836676,
+    "fitted_params": [
+      12.52217406936444
+    ]
+  },
+  {
+    "equation": "(x1+log(x2+1))/((x3+c[0])**0.5)",
     "complexity": 12,
-    "nmae": 0.06462197368682761,
+    "nmae": 0.15057766302582903,
     "fitted_params": [
-      2.1169650989902014,
-      0.09028031483415679
+      5.327929687500007
     ]
   },
   {
-    "equation": "c[0]+c[1]*x1+c[2]*x2**2",
-    "complexity": 11,
-    "nmae": 0.060531900320220156,
+    "equation": "((x1*x2)**0.5)/(x3+c[0])",
+    "complexity": 9,
+    "nmae": 0.1174090820532066,
     "fitted_params": [
-      0.8710899713744378,
-      0.025462827515772904,
-      -0.0002454728906076984
+      1.9450213293574024
     ]
   },
   {
-    "equation": "c[0]+c[1]*movavg(1, 3)+c[2]*x2+c[3]*x3",
-    "complexity": 13,
-    "nmae": 0.054547558548776125,
+    "equation": "(x1+x2)/(x3+c[0])",
+    "complexity": 7,
+    "nmae": 0.10266944274872537,
     "fitted_params": [
-      0.8789233428573509,
-      0.0247022931750678,
-      -0.0010128623116896756,
-      -0.4852032854858039
-    ]
-  },
-  {
-    "equation": "1/(1+exp(-(c[0]+c[1]*x1+c[2]*x2)))",
-    "complexity": 16,
-    "nmae": 0.053921821356481436,
-    "fitted_params": [
-      1.8718025721786784,
-      0.2672902783415708,
-      0.07817084879150486
-    ]
-  },
-  {
-    "equation": "(1)/(1+exp(-(c[0]+c[1]*x1+c[2]*(x2)**0.5)))",
-    "complexity": 18,
-    "nmae": 0.051754977352538825,
-    "fitted_params": [
-      1.801022907680765,
-      0.2224287228757567,
-      0.24858827987141274
-    ]
-  },
-  {
-    "equation": "1/(1+exp(-(c[0]+c[1]*x1+c[2]*x2+c[3]*x3)))",
-    "complexity": 20,
-    "nmae": 0.05146234003613737,
-    "fitted_params": [
-      1.8733870259469805,
-      0.27946842699495833,
-      0.08240251104592136,
-      -6.936644110860559
+      4.048299011786479
     ]
   }
 ]
-Total chain run time: 60.07356142997742 seconds.
+[
+  {
+    "equation": "min(1,max(0,x2/(x1+c[0])))",
+    "complexity": 5,
+    "nmae": 0.9074746253722081,
+    "fitted_params": [
+      -1.6330535173841845
+    ]
+  },
+  {
+    "equation": "x1/(x1+x3+c[0])",
+    "complexity": 7,
+    "nmae": 0.5094614401216347,
+    "fitted_params": [
+      0.1633517708388204
+    ]
+  },
+  {
+    "equation": "1/(1+exp(-(x1+x2-sqrt(x3))))",
+    "complexity": 13,
+    "nmae": 0.5025536110963609,
+    "fitted_params": []
+  },
+  {
+    "equation": "1/(1+exp(-(x1+x2-x3)))",
+    "complexity": 12,
+    "nmae": 0.4928060299876703,
+    "fitted_params": []
+  },
+  {
+    "equation": "(1)/(1+exp(-(x1+log(x2+1)-x3)))",
+    "complexity": 15,
+    "nmae": 0.43150769236757064,
+    "fitted_params": []
+  },
+  {
+    "equation": "(1)/(1+exp(-(x1-x3)))",
+    "complexity": 10,
+    "nmae": 0.3171038758771126,
+    "fitted_params": []
+  },
+  {
+    "equation": "(1)/(1+exp(-((x1)**0.5+(x2)**0.5-(x3)**0.5)))",
+    "complexity": 18,
+    "nmae": 0.3169158333424959,
+    "fitted_params": []
+  }
+]
+Total chain run time: 53.06932973861694 seconds.
 
 
 Iteration Information:
 {
   "Iteration number": "Seed",
-  "LLM Initial Thoughts": "Scratch Pad:\n1. Pattern 1 Analysis:\n- Dependent variable: Average compute load.\n- Independent variables: Task success ratio, vehicle density, UAV density, and vehicle counts at three junctions.\n- Observations: \n  - The average compute load seems influenced by a mix of density and success ratios, likely needing polynomial terms.\n  - Possible non-linear relationships can be modeled using polynomials or log transformations.\n\n2. Pattern 2 Analysis:\n- Dependent variable: Average V2U rate.\n- Independent variables: Vehicle density, UAV density, compute load.\n- Observations:\n  - The V2U rate is likely influenced by both densities and compute load.\n  - Can explore multiplicative interactions or polynomial terms to capture the non-linearity.\n\n3. Pattern 3 Analysis:\n- Dependent variable: Task success ratio.\n- Independent variables: V2U rate, V2I rate, compute load.\n- Observations:\n  - Task success ratio should be bounded between 0 and 1.\n  - Sigmoid function or bounded functions (min/max) might be useful to keep outputs within bounds.",
-  "New equations generated": "[\n  [\n    \"c0 + c1*x1 + c2*x2 + c3*x3 + c4*x4 + c5*x5 + c6*x6\",\n    \"c0 + c1*x1**2 + c2*x2**2 + c3*x3 + c4*x4 + c5*x5 + c6*x6\",\n    \"c0 + log(1 + c1*x1) + c2*x2 + c3*x3**2 + c4*x4 + c5*x5 + c6*x6\"\n  ],\n  [\n    \"c0 + c1*x1 + c2*x2 + c3*x3\",\n    \"c0 + c1*x1**2 + c2*x2 + c3*x3\",\n    \"c0 + c1*x1 + c2*x2**2 + c3*x3\"\n  ],\n  [\n    \"1 / (1 + exp(-(c0 + c1*x1 + c2*x2 + c3*x3)))\",\n    \"min(1, max(0, c0 + c1*x1 + c2*x2 + c3*x3))\",\n    \"c0 + c1*movavg(x1, 3) + c2*x2 + c3*x3\"\n  ]\n]"
+  "LLM Initial Thoughts": "Scratch Pad:\n\n### Pattern 1: Predict compute load\n- Inputs: x1 (task success ratio), x2 (vehicle density), x3 (UAV density), x4, x5, x6 (vehicle counts at junctions)\n- Target y is small and oscillatory (e.g., 0.015 max), suggesting a sensitive nonlinear function.\n- x1 tends to be inversely related to y (higher success ratio, lower load).\n- x2 and x3 are likely predictors of load due to their effect on task distribution.\n- x4 to x6 represent congestion; high counts likely increase compute load.\n\nHypotheses:\n- log(x2 + x3) or log(x4 + x5 + x6 + \u03b5) could be useful\n- Inverse of x1 may reflect increasing load when success ratio drops\n- Try combinations like x2 / (x1 + c)\n\nCandidate expressions:\n1. y \u2248 (x2 + x4 + x5 + x6) / (x1 + c0)\n2. y \u2248 log(x2 + x3 + x4 + x5 + x6)\n3. y \u2248 x2 * x3 / (x1 + c1)\n\n### Pattern 2: Predict V2U rate\n- Inputs: x1 (vehicle density), x2 (UAV density), x3 (compute load)\n- Output y is 0 for low x1, spikes around x1 ~1.1 to 3.5, then plateaus or oscillates.\n- x1 and x2 drive V2U connectivity; x3 (compute load) can act as congestion penalty.\n\nHypotheses:\n- x1 * x2 / (1 + x3) is standard load-penalized communication\n- log(x1 + 1) * x2 captures capacity and log-growth\n- Saturating form like x1 / (x1 + x3 + c)\n\nCandidate expressions:\n1. y \u2248 x1 * x2 / (x3 + c0)\n2. y \u2248 log(x1 + 1) * x2\n3. y \u2248 x1 / (x1 + x3 + c1)\n\n### Pattern 3: Predict task success ratio\n- Inputs: x1 (V2U rate), x2 (V2I rate), x3 (compute load)\n- y must be bounded in [0,1]; use sigmoid or min(1,...) forms\n- Expect success ratio to increase with x1, x2 (connectivity), and decrease with x3 (overload)\n\nHypotheses:\n- y \u2248 1 / (1 + exp(-(a*x1 + b*x2 - c*x3)))\n- or min(1, max(0, (x1 + x2) / (x3 + c)))\n\nCandidate expressions:\n1. y \u2248 1 / (1 + exp(-(x1 + x2 - x3)))\n2. y \u2248 min(1, max(0, (x1 + x2) / (x3 + c0)))\n3. y \u2248 x1 * x2 / (x3 + c1)",
+  "New equations generated": "[\n[\"(x2 + x4 + x5 + x6) / (x1 + c0)\", \"log(x2 + x3 + x4 + x5 + x6)\", \"x2 * x3 / (x1 + c1)\"],\n[\"x1 * x2 / (x3 + c0)\", \"log(x1 + 1) * x2\", \"x1 / (x1 + x3 + c1)\"],\n[\"1 / (1 + exp(-(x1 + x2 - x3)))\", \"min(1, max(0, (x1 + x2) / (x3 + c0)))\", \"x1 * x2 / (x3 + c1)\"]\n]"
 }
 {
   "Iteration number": 1,
-  "LLM Thoughts": "To analyze the dataset and suggest new equations, we need to identify patterns in the data and understand the interrelationships between the variables. Let's break down the analysis for each pattern:\n\nPattern 1 Analysis:\n- Dependent variable (y) is the average compute load of the next time slot.\n- Independent variables include current task success ratio, vehicle density, UAV density, and junction vehicle counts.\n- The task success ratio (x1), vehicle density (x2), and UAV density (x3) are continuous and likely influence the compute load directly.\n- Junction vehicle counts (x4, x5, x6) are discrete and might have threshold effects or polynomial relationships.\n- Given the oscillating behavior, logarithmic or polynomial terms might be useful.\n- Previous expressions suggested linear and polynomial structures, but we should explore combinations with logarithmic or exponential terms.\n\nPattern 2 Analysis:\n- Dependent variable (y) is the average V2U rate of the next time slot.\n- Independent variables include current vehicle density, UAV density, and compute load.\n- Vehicle density (x1) and UAV density (x2) are spatial factors that affect link availability.\n- Compute load (x3) is a temporal factor that affects communication performance.\n- Considering previous expressions, we can explore interactions between spatial and temporal variables.\n- Polynomial terms or exponential combinations might capture the complex relationship better.\n\nPattern 3 Analysis:\n- Dependent variable (y) is the task success ratio of the next time slot.\n- Independent variables include current average V2U rate, V2I rate, and compute load.\n- Task success ratio is bounded between 0 and 1, suggesting the use of sigmoid or bounded functions.\n- V2U rate (x1) and V2I rate (x2) are communication metrics affecting task success.\n- Compute load (x3) impacts resource availability, affecting task execution.\n- Previous expressions used sigmoid and bounded functions; exploring polynomial terms or interactions could provide diverse suggestions.\n\nFor each pattern, we aim to minimize complexity and loss while ensuring diversity in the suggested expressions. Let's proceed with the suggestions.",
-  "New equations generated": "[\n  [\n    \"c_0 + c_1*x_1 + c_2*log(x_2) + c_3*x_3**2\",\n    \"c_0 + c_1*x_1**2 + c_2*x_5 + c_3*exp(x_6)\",\n    \"c_0 + c_1*sqrt(x_1) + c_2*x_4*x_5\"\n  ],\n  [\n    \"c_0 + c_1*x_1 + c_2*x_3**2 + c_3*log(x_2)\",\n    \"c_0 + c_1*x_1**2 + c_2*sqrt(x_3)\",\n    \"c_0 + c_1*exp(x_1) + c_2*x_2*x_3\"\n  ],\n  [\n    \"1/(1 + exp(-(c_0 + c_1*x_1 + c_2*x_2)))\",\n    \"min(1, max(0, c_0 + c_1*x_3 + c_2*x_1*x_2))\",\n    \"1 - exp(-c_0 - c_1*x_1**2)\"\n  ]\n]"
+  "LLM Thoughts": "Scratch Pad:\n\n**Pattern 1 (compute load):**\n- Previous best: (x2+x4+x5+x6)/(x1+c0) with complexity 11 and NMAE ~0.189\n- Second best: x1*x2/(x3+c0) with complexity 7 and NMAE ~0.212\n- Goal: improve or diversify expressions, potentially using polynomial (x2\u00b2), log(x1), or moving averages.\n\nIdeas:\n1. Try log-based denominator to reduce sensitivity to x1 near 0.\n2. Use x2\u00b2 or interaction terms like x1*x2 or x2*x4 to capture vehicle congestion effects.\n3. movavg(x2, k) and movavg(x4, k) could capture inertia in vehicle density.\n\n**Pattern 2 (V2U rate):**\n- Best: x1*x2/(x3+c0) (complexity 7, NMAE ~0.212)\n- Data shows V2U increases nonlinearly with vehicle density until saturation, then flattens.\n- Try structures that saturate:\n  - x1 / (c0 + x3)\n  - x1 * log(x2 + 1)\n  - x1 / (1 + exp(-x2))\n\n**Pattern 3 (task success ratio):**\n- Best so far: sigmoid + bounded rational.\n- Use sigmoid(x1 - x3), as high compute load reduces success.\n- Consider x1 / (x1 + x3) \u2192 bounded and reflects competition between V2U and load.\n- min(1, max(0, ...)) format may help enforce [0,1] range.\n\nFor diversity, consider:\n- Use of sqrt or cube\n- Use of log(1 + x3) in denominator to dampen load effect\n- Use of movavg(x3, 3) to smooth out load volatility",
+  "New equations generated": "[[\"(x2**2 + x4 + x5)/(x1 + c0)\", \"log(x2 + 1)/(x1 + c0)\", \"(x4 + x5 + x6)/movavg(x2, 3)\"], \n [\"x1/(log(x3 + 1) + c0)\", \"x1*log(x2 + 1)/(x3 + c0)\", \"x1/(1 + exp(-x2))\"], \n [\"1/(1 + exp(-(x1 - x3)))\", \"x1/(x1 + x3 + c0)\", \"min(1, max(0, (x1 - log(x3 + 1))/(x2 + c0)))\"]]"
 }
 {
   "Iteration number": 2,
-  "LLM Thoughts": "Pattern 1 Analysis:\nThe dependent variable is the average compute load, which appears to be influenced by several factors including the task success ratio, vehicle density, UAV density, and junction vehicle counts. The compute load shows complex oscillating behavior over time, suggesting a potentially non-linear relationship. Polynomial terms in x1 and x2 could capture the oscillations, while logarithmic or exponential structures might help model the dynamics related to density and success ratios. Residual combinations or moving average style components could be useful for capturing temporal dependencies.\n\nPattern 2 Analysis:\nThe dependent variable is the average V2U rate, influenced by vehicle density, UAV density, and compute load. The V2U rate is likely affected by spatial constraints and density of the UAVs and vehicles, suggesting a potential for non-linear relationships. Polynomial terms and interactions between density and load could be useful, while logarithmic or exponential structures might capture the dynamics related to communication range and link availability.\n\nPattern 3 Analysis:\nThe dependent variable is the task success ratio, constrained by deadlines and compute load saturation. The success ratio must be bounded between 0 and 1, which suggests using structures that naturally output bounded values. Sigmoids or bounded min/max functions could be appropriate. The success ratio is influenced by the V2U rate, V2I rate, and compute load, suggesting potential interactions between these variables.",
-  "New equations generated": "[\n    [\n        \"c0 + c1*x1**2 + c2*log(x2) + c3*x5\",\n        \"c0 + c1*x1 + c2*sqrt(x2) + c3*x4*x6\",\n        \"c0 + c1*x1**3 + c2*exp(x3) + c3*x4\"\n    ],\n    [\n        \"c0 + c1*x1**2 + c2*x3 + c3*log(x2)\",\n        \"c0 + c1*sqrt(x1) + c2*x2**2 + c3*x3\",\n        \"c0 + c1*x1 + c2*x3**2 + c3*exp(x2)\"\n    ],\n    [\n        \"1 / (1 + exp(-(c0 + c1*x1 + c2*x2)))\",\n        \"min(1, max(0, c0 + c1*x1*x3))\",\n        \"c0 + c1*movavg(x3, 2) + c2*x1**2\"\n    ]\n]"
+  "LLM Thoughts": "Scratch Pad:\n\n**Pattern 1: Compute Load Prediction**\n- Prior expressions are mostly of the normalized sum type: (x2+x4+x5+x6)/(x1+c0), or log(x2+1)/(x1+c0).\n- Let's explore more diverse forms:\n  - Use polynomial terms: x2\u00b2, x1\u00b2\n  - Use log(x4 + x5 + 1) or log(x2 + x5 + 1) to compress large counts\n  - Try residual-like patterns: (x2 - x3)/(x1 + c0)\n  - Use movavg to simulate delay: movavg(x5, 3)/(x1 + c0)\n\n**Pattern 2: V2U Rate Prediction**\n- Already tried x1*x2/(x3+c0), x1*log(x2+1)/(x3+c0)\n- Explore:\n  - Using log(x3 + 1) in denominator\n  - Consider cube of x1 (vehicle density) to capture congestion\n  - Try (x1 + x2)/(x3 + c0)\n  - Try exp(-x3) as modulation term\n\n**Pattern 3: Task Success Ratio Prediction**\n- Needs to be bounded in [0,1]\n- Use sigmoid or bounded min/max expressions\n- Explored: sigmoid(x1+x2-x3), min(1,max(0,...))\n- Try:\n  - sigmoid(x1 - x3)\n  - sigmoid(x2 - x3)\n  - min(1, max(0, (x1 + x2)/(x2 + c0))) \u2014 a normalized ratio\n  - 1 / (1 + exp(-(x1 + c0*x2 - x3)))",
+  "New equations generated": "[\n  [\n    \"\\\\frac{x_2^2 + \\\\log(x_4 + x_5 + 1)}{x_1 + c_0}\",\n    \"\\\\frac{\\\\text{movavg}(x_5, 3)}{x_1 + c_0}\",\n    \"\\\\frac{x_2 - x_3}{x_1 + c_0}\"\n  ],\n  [\n    \"\\\\frac{x_1^3}{\\\\log(x_3 + 1) + c_0}\",\n    \"\\\\frac{x_1 + x_2}{x_3 + c_0}\",\n    \"\\\\frac{x_2}{1 + \\\\exp(-x_1)}\"\n  ],\n  [\n    \"\\\\frac{1}{1 + \\\\exp(-(x_1 - x_3))}\",\n    \"1 - \\\\exp(-x_1 - c_0 x_2 + x_3)\",\n    \"\\\\min(1, \\\\max(0, \\\\frac{x_1 + x_2}{x_2 + c_0}))\"\n  ]\n]"
 }
 {
   "Iteration number": 3,
-  "LLM Thoughts": "The dataset provided consists of three distinct patterns, each with a unique set of dependent and independent variables. The goal is to suggest equations that minimize both complexity and loss, while ensuring diversity among the options. \n\nPattern 1 involves predicting the average compute load of the next time slot based on current indicators such as task success ratio, vehicle density, UAV density, and junction vehicle counts. The compute load exhibits oscillating behavior, suggesting potential non-linear relationships. The existing equations for this pattern include polynomial terms, logarithmic structures, and residual combinations, indicating the potential for complex interactions. The independent variables show varied ranges and distributions, which can influence the non-linearity and interactions in the equations. \n\nPattern 2 predicts the average V2U rate based on current vehicle density, UAV density, and compute load. The V2U rate is influenced by spatial constraints and communication range, suggesting potential for equations that incorporate spatial or geometric components. The existing equations for this pattern are simpler, often involving linear or polynomial terms, indicating potential for straightforward relationships among the variables. \n\nPattern 3 predicts the task success ratio, constrained by factors such as TTL, latency, and compute load saturation. The task success ratio must remain bounded within [0, 1], suggesting the use of structures like sigmoid, min/max bounds, or other naturally bounded functions. The complexity of interactions in this pattern is evident from the existing equations, which incorporate logistic functions and bounded expressions. \n\nFor each pattern, the suggested equations should explore diverse mathematical structures while respecting the constraints and characteristics of the data. The goal is to provide a range of options that balance complexity and accuracy, while avoiding SR-similarity to existing equations. \n\nPattern 1: \n1. Explore polynomial interactions among independent variables, potentially incorporating logarithmic components for non-linear scaling.\n2. Consider residual components like moving averages to capture temporal fluctuations.\n3. Utilize compound functions like min/max to handle boundary conditions or saturation effects.\n\nPattern 2:\n1. Employ straightforward polynomial or linear terms to capture direct interactions among variables.\n2. Consider spatial or geometric structures to reflect constraints imposed by UAV operations.\n3. Explore combinations of polynomial terms with simple transformations like square or cube.\n\nPattern 3:\n1. Utilize bounded functions like sigmoid or min/max to ensure output constraints.\n2. Explore polynomial terms to capture interactions among multiple indicators.\n3. Consider combinations of exponential and logarithmic structures to handle saturation effects.\n\nThe suggested equations should demonstrate diversity in approach while maintaining simplicity and effectiveness in capturing the underlying patterns.",
-  "New equations generated": "[[\"c_0 + c_1 * x1**2 + c_2 * x2**3\", \"c_0 + c_1 * log(x1) + c_2 * sqrt(x2)\", \"c_0 * exp(c_1 * x1 + c_2 * x2)\"], \n [\"c_0 + c_1 * x1 * x3\", \"c_0 + c_1 * sqrt(x1) + c_2 * x2\", \"c_0 * x1**2 + c_1 * x3\"], \n [\"1 / (1 + exp(-(c_0 + c_1 * x1 + c_2 * x2)))\", \"min(1, max(0, c_0 + c_1 * x1 * x3))\", \"c_0 + c_1 * x1 + c_2 * x2**2\"]]"
+  "LLM Thoughts": "Scratchpad:\n\n**Pattern 1 (Compute Load Prediction):**\n- Previous expressions rely mostly on ratios involving (x2+x4+x5+x6) and denominator x1+c0.\n- Best NMAE was ~0.17 with log(x2+1)/(x1+c0), suggesting that vehicle density x2 is highly informative given traffic-related effects.\n- x3 (UAV density) is constant \u2192 not useful directly.\n- x4, x5, x6 represent local congestion at junctions.\n- Try combinations with x2^2, movavg(x2), and log components for congestion terms.\n- Propose one expression using moving average (e.g., movavg(x2, 3)), one using polynomial variant of x2, and one using a normalization by x1.\n\n**Pattern 2 (V2U Rate Prediction):**\n- Best prior expression: (x1+x2)/(x3+c0), NMAE ~0.10.\n- x3 (compute load) in denominator helps normalize effect of density.\n- Try one with log(x2), another with polynomial of x1, and one with multiplicative interaction of x1 and x2.\n- Important to diversify: try multiplicative, additive, and log structures.\n\n**Pattern 3 (Task Success Ratio Prediction):**\n- Output is bounded in [0,1]; sigmoid functions or clamped expressions are appropriate.\n- Best prior NMAE ~0.317 with sigmoid on (x1-x3).\n- Try expressions like:\n  - sigmoid(x1 - log(x2+1)) \u2192 V2U importance minus V2I attenuation.\n  - min(1, max(0, x2 / (x1 + c0))) \u2192 bounded rational form.\n  - 1 / (1 + exp(-(x1 + x2 - sqrt(x3)))) \u2192 combine V2U, V2I, and compute load.\n\nEnsure all three expressions per pattern are SR-diverse (different structure families: ratio, log-linear, sigmoid, min/max).",
+  "New equations generated": "[[\"(x2 + x4 + x5 + x6) / (x1 + c0)\", \"log(x2 + 1) * (x5 + 1) / (x1 + c0)\", \"movavg(x2, 3) / (x1 + c0)\"], \n [\"(x1 * x2) / (x3 + c0)\", \"x1 / (log(x3 + 1) + c0)\", \"(x1**2 + log(x2 + 1)) / (x3 + c0)\"], \n [\"1 / (1 + exp(-(x1 - log(x2 + 1))))\", \"min(1, max(0, x2 / (x1 + c0)))\", \"1 / (1 + exp(-(x1 + x2 - sqrt(x3))))\"]]"
 }
 {
   "Iteration number": 4,
-  "LLM Thoughts": "Pattern 1 Analysis:\nGiven the data for Pattern 1, the dependent variable (average compute load) appears to capture a relationship with the independent variables consisting of task success ratio, vehicle density, UAV density, and vehicle counts at various junctions. Observing the previous equations and their complexity, it is notable that logarithmic and polynomial terms are effective in encapsulating the non-linear nature of this pattern.\n\n1. Exponential structures like exp(c0 + c1*x1 + c2*x2) show promise given the oscillating behavior and can model rapid changes effectively.\n2. Polynomial terms may capture the gradual changes in compute load, especially with terms like x1^2 or x2^3, which are present in previous models.\n3. Considering the complexity and accuracy trade-off, a mix of polynomial terms and logarithmic transformations could serve well.\n\nPattern 2 Analysis:\nFor Pattern 2, the dependent variable is the average V2U rate, influenced by vehicle and UAV densities and compute load. The V2U rate appears to have a strong correlation with vehicle density and compute load, suggesting the need for terms that capture these interactions.\n\n1. Polynomial expressions with terms like x1*x3 or x1^2 can capture interaction effects and gradual changes in the V2U rate.\n2. Given the presence of exponential terms in previous successful models, such structures can also capture non-linearities effectively.\n3. A balanced approach using both multiplicative and additive polynomial terms might provide a good trade-off between complexity and accuracy.\n\nPattern 3 Analysis:\nThe third pattern's dependent variable is the task success ratio, which is bound between 0 and 1. The expressions previously identified involved bounded functions like sigmoid functions and max/min operations, which are fitting for capturing this bounded behavior.\n\n1. Sigmoid functions naturally fit the requirement of bounded outputs, making them suitable for task success ratios.\n2. Polynomial terms can introduce necessary non-linearities, while simultaneous use of bounded functions can ensure the output remains within desired limits.\n3. A combination of additive terms within a sigmoid or bounded function can provide the necessary complexity without overfitting.",
-  "New equations generated": "[[\"c_0 + c_1 \\\\cdot \\\\log(1 + x_1) + c_2 \\\\cdot x_2^2 + c_3 \\\\cdot x_5\", \"c_0 + c_1 \\\\cdot x_1^2 + c_2 \\\\cdot x_3 + c_3 \\\\cdot \\\\sqrt{x_4}\", \"c_0 \\\\cdot \\\\exp(c_1 \\\\cdot x_2 + c_2 \\\\cdot x_6)\"], [\"c_0 + c_1 \\\\cdot x_1 \\\\cdot x_3 + c_2 \\\\cdot x_2\", \"c_0 * x_1^2 + c_1 \\\\cdot \\\\sqrt{x_3}\", \"c_0 \\\\cdot \\\\exp(c_1 \\\\cdot x_1 + c_2 \\\\cdot x_3)\"], [\"\\\\frac{1}{1 + \\\\exp(-(c_0 + c_1 \\\\cdot x_1 + c_2 \\\\cdot \\\\sqrt{x_2}))}\", \"\\\\min(1, \\\\max(0, c_0 + c_1 \\\\cdot x_1^2 + c_2 \\\\cdot x_3))\", \"\\\\frac{1}{1 + \\\\exp(-(c_0 + c_1 \\\\cdot x_2 + c_2 \\\\cdot x_3^2))}\"]]"
+  "LLM Thoughts": "Scratch Pad:\n\n**Pattern 1 (Compute Load Prediction):**\nGoal: Predict compute load using 6 variables; consider task success (x1), vehicle density (x2), UAV density (x3), and junction counts (x4\u2013x6). Prior good forms were rational expressions over (x1 + c0), combining log, polynomial, and movavg.\n\n- Expression 1: Use polynomial-log combination: `(x2^2 + log(x5 + 1)) / (x1 + c0)` \u2014 similar to previous, but use x5 instead of x4+x5. SR-distinct.\n- Expression 2: Introduce sqrt(x2) and movavg(x5): `(sqrt(x2) + movavg(x5, 2)) / (x1 + c0)` \u2014 diverse structure.\n- Expression 3: Use exponential decay with UAV density and linear junction counts: `(exp(-x3) * (x4 + x5)) / (x1 + c0)` \u2014 new function shape.\n\n**Pattern 2 (V2U Rate Prediction):**\nGoal: Predict V2U rate from vehicle density (x1), UAV density (x2), and compute load (x3). Prior forms involved log(x3+1) in denominator or linear forms.\n\n- Expression 1: `(x1 * x2) / (x3 + c0)` \u2014 multiplicative numerator with compute load denominator; simple and interpretable.\n- Expression 2: `x1 / (sqrt(x3) + c0)` \u2014 introduces sqrt for saturation when compute increases.\n- Expression 3: `log(x1 + 1) * x2 / (x3 + c0)` \u2014 log scaling for vehicle density, maintains SR-diversity.\n\n**Pattern 3 (Task Success Ratio Prediction):**\nGoal: Predict bounded ratio using V2U (x1), V2I (x2), and compute load (x3). Prior good forms were sigmoid-based. We'll diversify with both sigmoid and bounded min/max.\n\n- Expression 1: Sigmoid form with all 3 vars: `1 / (1 + exp(-(x1 + x2 - x3)))` \u2014 already appears, so skip.\n- Expression 2: New sigmoid: `1 / (1 + exp(-(x1 + log(x2 + 1) - x3)))` \u2014 log V2I rate, additive.\n- Expression 3: Bounded form: `min(1, max(0, (x1 + x2) / (x3 + c0)))` \u2014 fraction with clamping.\n- Expression 4: Use cube root (via exp-log): `1 / (1 + exp(-(sqrt(x1) + sqrt(x2) - sqrt(x3))))` \u2014 non-linear sqrt combination.",
+  "New equations generated": "[\n  [\n    \"\\\\frac{x_2^2 + \\\\log(x_5 + 1)}{x_1 + c_0}\",\n    \"\\\\frac{\\\\sqrt{x_2} + \\\\text{movavg}(x_5, 2)}{x_1 + c_1}\",\n    \"\\\\frac{\\\\exp(-x_3) (x_4 + x_5)}{x_1 + c_2}\"\n  ],\n  [\n    \"\\\\frac{x_1 x_2}{x_3 + c_0}\",\n    \"\\\\frac{x_1}{\\\\sqrt{x_3} + c_1}\",\n    \"\\\\frac{\\\\log(x_1 + 1) \\\\cdot x_2}{x_3 + c_2}\"\n  ],\n  [\n    \"\\\\frac{1}{1 + \\\\exp(-(x_1 + \\\\log(x_2 + 1) - x_3))}\",\n    \"\\\\min(1, \\\\max(0, \\\\frac{x_1 + x_2}{x_3 + c_0}))\",\n    \"\\\\frac{1}{1 + \\\\exp(- (\\\\sqrt{x_1} + \\\\sqrt{x_2} - \\\\sqrt{x_3}))}\"\n  ]\n]"
 }
 {
   "Iteration number": 5,
-  "LLM Thoughts": "To address the problem of finding new expressions for the given patterns, we will analyze the characteristics of each pattern and propose equations that aim to balance complexity and performance.\n\nPattern 1:\n- The dependent variable is the average compute load of the next time slot. This load is influenced by task success ratio, vehicle density, UAV density, and junction vehicle counts.\n- The task success ratio and vehicle density are particularly important. Polynomial terms such as squares and cubes could model non-linear relationships, while logarithmic terms might capture saturation effects.\n- Including terms that model interactions between variables (e.g., products or combinations) might be useful to capture complex influences on compute load.\n\nPattern 2:\n- The dependent variable is the average V2U rate. This rate is influenced by vehicle density, UAV density, and compute load.\n- The communication range and vehicle distribution are significant factors. Polynomial and interaction terms might effectively model these influences.\n- Given the spatial constraints and UAV operation characteristics, exponential terms could capture multiplicative effects on communication rates.\n\nPattern 3:\n- The dependent variable is the task success ratio. As it is bounded between 0 and 1, it's crucial to use expressions that naturally fit within this range, such as sigmoid functions or bounded min/max expressions.\n- V2U rate, V2I rate, and compute load are key influences, and interaction terms or polynomial terms can model their effects.\n- The constraints (e.g., TTL, latency) suggest using structures that inherently limit output values to the desired range.\n\nThe goal is to propose diverse yet simple expressions to model the given patterns effectively, considering the constraints and characteristics described.",
-  "New equations generated": "[\n    [\n        \"c0 + c1*x1 + c2*sqrt(x2) + c3*x4*x5\", \n        \"c0 + c1*x1**2 + c2*log(1+x2) + c3*x4\",\n        \"c0 + c1*x1 + c2*x2**2 + c3*x3**3\"\n    ],\n    [\n        \"c0 + c1*x1*x3 + c2*sqrt(x2)\", \n        \"c0 + c1*x1**2 + c2*x2 + c3*x3\", \n        \"c0 + c1*log(1+x1) + c2*x3**2\"\n    ],\n    [\n        \"1 / (1 + exp(-(c0 + c1*x1 + c2*x2)))\", \n        \"min(1, max(0, c0 + c1*x1*x2 + c2*x3))\", \n        \"1 / (1 + exp(-(c0 + c1*x1**2 + c2*x2)))\"\n    ]\n]"
+  "LLM Thoughts": "Scratch Pad:\n\n**Pattern 1 (Compute Load Prediction):**\nPrior expressions show a strong pattern: compute load \u221d f(x2, x5, x4, x1)/denominator(x1 + c0). The best expressions include additive combinations of traffic volume indicators (x2, x4, x5, x6) and logarithmic terms. Key insight: compute load rises with vehicle density and local congestion (junctions). Potential diverse expressions:\n\n- Try a square root or squared version of vehicle density or junction count in numerator\n- Logarithmic or exponential transform of x2 or x5 for non-linearity\n- Use a movavg(x2, k) in numerator to reflect smoothed density shock\n\n**Pattern 2 (V2U Rate Prediction):**\nBest previous expressions involve x1, x2 over (x3 + c). x1+x2 or x1*x2 in numerator. A good expression must reflect that V2U rate rises with vehicle density and UAV density, but saturates under high compute load. Try:\n\n- log(x3 + 1) in the denominator (to smooth compute load effects)\n- x1*x2 or sqrt(x1*x2) for multiplicative effect of vehicle and UAV density\n- Try inverse-square-root structure: x1 / sqrt(x3 + c0)\n\n**Pattern 3 (Task Success Ratio):**\nMust be bounded in [0, 1]. Prior expressions use sigmoid or min/max. Success ratio increases with low compute load and better V2U/V2I. Try:\n\n- Sigmoid of linear or square root combination of x1, x2 minus x3\n- Try bounded forms: min(1, max(0, expr))\n- Try sqrt(x1), sqrt(x2), or log(x1 + 1) to prevent unbounded growth\n\nEnsure diversity by using different nonlinearities and variable combinations.",
+  "New equations generated": "[\n  [\n    \"\\\\frac{\\\\log(x_2 + 1) + x_5}{x_1 + c_0}\",\n    \"\\\\frac{\\\\sqrt{x_2} + x_4 + x_6}{x_1 + c_0}\",\n    \"\\\\frac{\\\\text{movavg}(x_2, 2) + x_5^2}{x_1 + c_0}\"\n  ],\n  [\n    \"\\\\frac{x_1 \\\\cdot x_2}{\\\\log(x_3 + 1) + c_0}\",\n    \"\\\\frac{\\\\sqrt{x_1 \\\\cdot x_2}}{x_3 + c_0}\",\n    \"\\\\frac{x_1 + \\\\log(x_2 + 1)}{\\\\sqrt{x_3 + c_0}}\"\n  ],\n  [\n    \"\\\\frac{1}{1 + \\\\exp\\\\left( -\\\\left( \\\\sqrt{x_1} + \\\\sqrt{x_2} - \\\\sqrt{x_3} \\\\right) \\\\right)}\",\n    \"\\\\min\\\\left(1, \\\\max\\\\left(0, \\\\frac{x_1 + x_2}{x_3 + c_0} \\\\right)\\\\right)\",\n    \"\\\\frac{1}{1 + \\\\exp\\\\left( -\\\\left( \\\\log(x_1 + 1) + x_2 - x_3 \\\\right) \\\\right)}\"\n  ]\n]"
 }

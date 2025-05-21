@@ -99,8 +99,8 @@ class AirFogRuntimeUpdater:
 
     def retrain_expression(self):
         """ 使用历史数据 + LLM + optimizer 重建表达式 """
-        X = list(zip(*self.indep_vars)) + self.history_X
-        y = list(self.dep_vars) + self.history_y
+        X = list(map(np.array, list(zip(*self.indep_vars)) + self.history_X))
+        y = np.array(list(self.dep_vars) + self.history_y)
         current_eq = self.top_equations[self.best_expression_index]
 
         response = self.llm_chain.run(

@@ -287,6 +287,10 @@ class airFog:
             total_cost = (total_prompt_tokens * 0.03 + total_completion_tokens * 0.06) / 1000
         elif self.model == "gpt-4o":
             total_cost = (total_prompt_tokens * 0.0175 + total_completion_tokens * 0.07) / 1000
+        elif self.model == "chatgpt-4o-latest":
+            total_cost = (total_prompt_tokens * 0.035 + total_completion_tokens * 0.105) / 1000
+        elif self.model == "o3-mini":
+            total_cost = (total_prompt_tokens * 0.0088 + total_completion_tokens * 0.0352) / 1000
         else:
             raise ValueError(f"Unknown model: {self.model}")
 
