@@ -1,7 +1,7 @@
 from collections import deque
 import numpy as np
 
-from Prediction.helper import format_expressions, format_and_parse_expressions, custom_sorting, movavg
+from helper import format_expressions, format_and_parse_expressions, custom_sorting, movavg  # type: ignore
 
 class AirFogRuntimeUpdater:
     def __init__(self, pattern_id: int, exprs: list, fitted_params: list, optimizer, llm_chain,
