@@ -7,6 +7,7 @@ import numpy as np
 import random
 import torch
 import yaml
+import json
 from data_collector import DataCollector
 
 # 导入AirFogSim相关模块
@@ -101,11 +102,33 @@ predictions = [[] for _ in range(3)]
 actuals = [[] for _ in range(3)]
 errors = [[] for _ in range(3)]
 timestamps = [[] for _ in range(3)]
+update_points = [[] for _ in range(3)]  # 记录每次update_with_feedback发生的时间点
+formula_changes = [[] for _ in range(3)]  # 记录公式变化点
+formulas_history = [[] for _ in range(3)]  # 保存公式历史
 
 # 模拟执行
 accumulated_reward = 0
 last_values = {}  # 存储上一次的数据值
 update_interval = 5.0  # 每隔多少个时间单位更新一次模型
+
+last_x = [None] * 3
+last_y = [None] * 3
+
+# 保存初始公式
+if updaters:
+    for pattern_id, updater in enumerate(updaters):
+        if updater:
+            current_eqs = [{
+                "equation": eq["equation"],
+                "fitted_params": eq["fitted_params"],
+                "complexity": len(eq["equation"]),  # 用公式长度作为复杂度简单估计
+                "nmae": eq["last_mae"] if np.isfinite(eq["last_mae"]) else 0.0
+            } for eq in updater.top_equations]
+            formulas_history[pattern_id].append({
+                "time": 0.0,
+                "equations": current_eqs,
+                "best_idx": updater.best_expression_index
+            })
 
 while not env.isDone():
     # 记录任务信息
@@ -122,26 +145,28 @@ while not env.isDone():
     # 每10个时间步收集一次数据
     if int(env.simulation_time * 10) % 10 == 0:
         data_collector.collect(env, algorithm_module)
-        
+
         # 运行时更新
         if updaters and int(env.simulation_time) % update_interval == 0:
             print(f"\n时间 {env.simulation_time}: 执行预测并更新运行时模型")
-            
-            # 确保有足够的数据
+
             for pattern_id in range(3):
-                if len(data_collector.data['time']) < 2:
+                if pattern_id >= len(updaters) or updaters[pattern_id] is None:
                     continue
-                
-                # 为模式准备输入和输出数据
+
+                # 记录更新前的表达式和最佳索引
+                prev_best_index = updaters[pattern_id].best_expression_index
+                prev_equations = [eq["equation"] for eq in updaters[pattern_id].top_equations]
+
                 indep_names = indep_var_map[pattern_id]
                 dep_name = dep_var_map[pattern_id]
-                
+
                 # 获取当前输入
                 x_current = []
                 valid_inputs = True
                 for name in indep_names:
-                    if name in data_collector.data and data_collector.data[name]: # 检查列表是否存在且不为空
-                        value = data_collector.data[name][-1] # 获取最新的值
+                    if name in data_collector.data and data_collector.data[name]:
+                        value = data_collector.data[name][-1]
                         if value is None or (isinstance(value, float) and np.isnan(value)):
                             print(f"警告: 模式 {pattern_id} 的输入 '{name}' 在时间 {env.simulation_time:.2f} 为 None。跳过此更新。")
                             valid_inputs = False
@@ -151,41 +176,58 @@ while not env.isDone():
                         print(f"警告: 模式 {pattern_id} 的输入 '{name}' 在时间 {env.simulation_time:.2f} 不可用或为空。跳过此更新。")
                         valid_inputs = False
                         break
-                
-                if not valid_inputs:
-                    continue # 如果输入无效，则跳过此模式的当前更新
-                
-                # 如果还没有真实输出，则不更新
+
+                # 获取当前输出
                 y_current = None
-                if dep_name in data_collector.data and data_collector.data[dep_name]: # 检查列表是否存在且不为空
+                if dep_name in data_collector.data and data_collector.data[dep_name]:
                     y_value = data_collector.data[dep_name][-1]
-                    if y_value is None:
-                        print(f"警告: 模式 {pattern_id} 的实际输出 '{dep_name}' 在时间 {env.simulation_time:.2f} 为 None。")
-                        # y_current 保持为 None
-                    else:
+                    if y_value is not None:
                         y_current = y_value
-                else:
-                    print(f"警告: 模式 {pattern_id} 的实际输出 '{dep_name}' 在时间 {env.simulation_time:.2f} 不可用或为空。")
-                    # y_current 保持为 None
+
+                # 先用上一次的y做update_with_feedback（除了第一次）
+                if last_y[pattern_id] is not None:
+                    updater = updaters[pattern_id]
+                    if updater:
+                        updater.update_with_feedback(last_y[pattern_id])
+                        update_points[pattern_id].append(env.simulation_time)
+                        # print(f"模式{pattern_id+1} - update_with_feedback: {last_y[pattern_id]:.4f}")
                 
-                # 更新模型并记录预测和误差
+                # 检查表达式是否发生变化
+                curr_equations = [eq["equation"] for eq in updaters[pattern_id].top_equations]
+                curr_best_index = updaters[pattern_id].best_expression_index
+                
+                if prev_equations != curr_equations or prev_best_index != curr_best_index:
+                    print(f"模式{pattern_id+1} - 公式发生变化")
+                    formula_changes[pattern_id].append(env.simulation_time)
+                    
+                    # 保存公式变化历史
+                    current_eqs = [{
+                        "equation": eq["equation"],
+                        "fitted_params": eq["fitted_params"],
+                        "complexity": len(eq["equation"]),  # 简单估计
+                        "nmae": eq["last_mae"] if np.isfinite(eq["last_mae"]) else 0.0
+                    } for eq in updaters[pattern_id].top_equations]
+                    
+                    formulas_history[pattern_id].append({
+                        "time": env.simulation_time,
+                        "equations": current_eqs,
+                        "best_idx": curr_best_index
+                    })
+
+                # 再用当前x做预测
                 pred = None
                 error = float('nan')
-
-                if pattern_id < len(updaters):
+                if valid_inputs:
                     updater = updaters[pattern_id]
                     if updater:
                         pred = updater.record_prediction(x_current)
+                        if y_current is not None and pred is not None and not np.isnan(pred):
+                            error = abs(pred - y_current)
 
-                        if y_current is not None:
-                            updater.update_with_feedback(y_current)
-                            if pred is not None and not np.isnan(pred):
-                                error = abs(pred - y_current)
-                
+                # 记录
                 if pred is not None and not np.isnan(pred):
                     predictions[pattern_id].append(pred)
                     timestamps[pattern_id].append(env.simulation_time)
-                    
                     if y_current is not None:
                         actuals[pattern_id].append(y_current)
                         errors[pattern_id].append(error)
@@ -193,39 +235,100 @@ while not env.isDone():
                     else:
                         print(f"模式{pattern_id+1} - 预测: {pred:.4f}, 实际: 未知")
 
-    print(f"Simulation time: {env.simulation_time:.2f}, Reward: {accumulated_reward:.2f}", end='\r')
+                # 更新last_x, last_y
+                last_x[pattern_id] = x_current if valid_inputs else None
+                last_y[pattern_id] = y_current
 
-    env.render()  # 渲染可视化
+    print(f"Simulation time: {env.simulation_time:.2f}, Reward: {accumulated_reward:.2f}", end='\r')
+    env.render()
 
 # 关闭环境
 env.close()
 
-# 可视化预测结果
+# 保存最终的表达式
+final_formulas = []
+for pattern_id in range(3):
+    if updaters and pattern_id < len(updaters) and updaters[pattern_id]:
+        pattern_formulas = []
+        for eq in updaters[pattern_id].top_equations:
+            pattern_formulas.append({
+                "equation": eq["equation"],
+                "complexity": len(eq["equation"]),  # 简单估计复杂度
+                "nmae": eq["last_mae"] if np.isfinite(eq["last_mae"]) else 0.0,
+                "fitted_params": eq["fitted_params"]
+            })
+        final_formulas.append(pattern_formulas)
+    else:
+        final_formulas.append([])
+
+# 保存最终公式到JSON文件
+output_dir = os.path.join(airfogsim_root, 'output/runtime')
+os.makedirs(output_dir, exist_ok=True)
+with open(os.path.join(output_dir, 'final_formulas.json'), 'w') as f:
+    json.dump(final_formulas, f, indent=2)
+print(f"最终公式已保存到 {os.path.join(output_dir, 'final_formulas.json')}")
+
+# 可视化预测结果（重设计为散点图）
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 
 for pattern_id in range(3):
     if len(predictions[pattern_id]) > 0:
-        plt.figure(figsize=(10, 6))
-        plt.plot(timestamps[pattern_id], predictions[pattern_id], 'r-', label='prediction')
+        plt.figure(figsize=(12, 8))
         
+        # 创建散点图
+        plt.scatter(timestamps[pattern_id], predictions[pattern_id], 
+                   c='red', marker='o', s=50, alpha=0.7, label='Prediction')
+        
+        # 实际值散点图
         if len(actuals[pattern_id]) > 0:
-            plt.plot(timestamps[pattern_id][:len(actuals[pattern_id])], actuals[pattern_id], 'b-', label='actual')
-            
-            # 计算平均误差
-            avg_error = np.mean(errors[pattern_id])
-            plt.title(f'pattern{pattern_id+1} - {dep_var_map[pattern_id]}prediction (avg_error: {avg_error:.4f})')
-        else:
-            plt.title(f'pattern{pattern_id+1} - {dep_var_map[pattern_id]}prediction')
-            
-        plt.xlabel('time')
-        plt.ylabel(dep_var_map[pattern_id])
-        plt.legend()
-        plt.grid(True)
+            plt.scatter(timestamps[pattern_id][:len(actuals[pattern_id])], 
+                       actuals[pattern_id], c='blue', marker='x', s=50, 
+                       alpha=0.7, label='Actual')
         
-        # 保存图表
-        output_dir = os.path.join(airfogsim_root, 'output/prediction')
-        os.makedirs(output_dir, exist_ok=True)
-        plt.savefig(os.path.join(output_dir, f'pattern_{pattern_id+1}_prediction.png'))
+        # 添加误差条
+        if len(errors[pattern_id]) > 0:
+            for i, (t, p, a) in enumerate(zip(
+                timestamps[pattern_id][:len(errors[pattern_id])], 
+                predictions[pattern_id][:len(errors[pattern_id])], 
+                actuals[pattern_id][:len(errors[pattern_id])]
+            )):
+                plt.plot([t, t], [p, a], 'k-', alpha=0.3, linewidth=1)
+        
+        # 添加公式变化点标注
+        for idx, change_time in enumerate(formula_changes[pattern_id]):
+            if change_time in timestamps[pattern_id]:
+                time_idx = timestamps[pattern_id].index(change_time)
+                if time_idx < len(predictions[pattern_id]):
+                    pred_val = predictions[pattern_id][time_idx]
+                    plt.scatter(change_time, pred_val, c='yellow', marker='*', s=200, 
+                               edgecolors='black', zorder=5, label='Formula Change' if idx == 0 else "")
+                    
+                    # 添加公式变化注释
+                    for pattern_history in formulas_history[pattern_id]:
+                        if pattern_history["time"] == change_time:
+                            best_idx = pattern_history["best_idx"]
+                            if best_idx < len(pattern_history["equations"]):
+                                best_eq = pattern_history["equations"][best_idx]["equation"]
+                                # 截断过长的公式
+                                if len(best_eq) > 30:
+                                    best_eq = best_eq[:27] + "..."
+                                plt.annotate(f"Formula: {best_eq}", 
+                                           xy=(change_time, pred_val),
+                                           xytext=(10, 10), textcoords='offset points',
+                                           bbox=dict(boxstyle="round,pad=0.5", fc="yellow", alpha=0.7),
+                                           arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.2"))
+        
+        # 标题和图例
+        plt.title(f'Pattern {pattern_id+1} - {dep_var_map[pattern_id]} Prediction', fontsize=16)
+        plt.xlabel('Simulation Time', fontsize=14)
+        plt.ylabel(dep_var_map[pattern_id], fontsize=14)
+        plt.grid(True, linestyle='--', alpha=0.6)
+        plt.legend(fontsize=12)
+        plt.tight_layout()
+        
+        # 保存图片
+        plt.savefig(os.path.join(output_dir, f'pattern_{pattern_id+1}_prediction_scatter.png'))
         plt.close()
 
 # 保存预测结果
@@ -234,13 +337,16 @@ results = {
     'predictions': [p.tolist() if isinstance(p, np.ndarray) else p for p in predictions],
     'actuals': [a.tolist() if isinstance(a, np.ndarray) else a for a in actuals],
     'errors': [e.tolist() if isinstance(e, np.ndarray) else e for e in errors],
-    'dep_vars': dep_var_map
+    'dep_vars': dep_var_map,
+    'update_points': update_points,
+    'formula_changes': formula_changes,
+    'formulas_history': formulas_history
 }
 
 import json
-with open(os.path.join(airfogsim_root, 'output/prediction/runtime_predictions.json'), 'w') as f:
+with open(os.path.join(output_dir, 'runtime_predictions.json'), 'w') as f:
     json.dump(results, f, indent=2)
 
 print("\nSimulation done.")
-print(f"预测结果已保存到 {os.path.join(airfogsim_root, 'output/prediction/runtime_predictions.json')}")
-print(f"预测图表已保存到 {os.path.join(airfogsim_root, 'output')} 目录")
+print(f"Prediction results saved to {os.path.join(output_dir, 'runtime_predictions.json')}")
+print(f"Prediction charts saved to {output_dir} directory")

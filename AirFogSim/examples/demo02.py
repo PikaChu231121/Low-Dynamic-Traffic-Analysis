@@ -87,12 +87,12 @@ env.close()
 print("\nSimulation done.")
 
 # ==== 新增：批量测试多个实验结果 ====
-output_json_path = os.path.join(os.path.dirname(__file__), '../output/all_runs_nmae.json')
+output_json_path = os.path.join(os.path.dirname(__file__), '../output/runtime/nmae_results.json')
 os.makedirs(os.path.dirname(output_json_path), exist_ok=True)
 formula_json_paths = [
-    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run1.json'),
-    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run2.json'),
-    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run3.json'),
+    os.path.join(os.path.dirname(__file__), '../output/runtime/final_formulas.json'),
+    # os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run2.json'),
+    # os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run3.json'),
 ]
 data_collector.predict_and_compare_metrics(
     formula_json_paths=formula_json_paths,

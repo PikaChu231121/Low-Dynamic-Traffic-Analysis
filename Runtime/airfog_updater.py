@@ -83,7 +83,9 @@ class AirFogRuntimeUpdater:
         # 滑动窗口 NMAE 判断是否需要更新
         if len(self.recent_y_true) == self.window_size:
             errors = [abs(p - t) for p, t in zip(self.recent_y_pred, self.recent_y_true)]
-            nmae = np.mean(errors) / (np.max(self.recent_y_true) - np.min(self.recent_y_true) + 1e-8)
+            y_range = np.max(self.recent_y_true) - np.min(self.recent_y_true)
+            # 避免分母为0
+            nmae = np.mean(errors) / (y_range + 1e-8)
             print(f"[Pattern {self.pattern_id}] Window NMAE={nmae:.4f}")
             if nmae > self.error_threshold:
                 print(f"[Pattern {self.pattern_id}] Triggering update (NMAE={nmae:.4f})")
@@ -130,10 +132,8 @@ class AirFogRuntimeUpdater:
 
         self.top_equations = [{
             "equation": r["equation"],
-            "current_pred": None,  # Will be calculated on next predict() call
-            "current_mae": r["nmae"], # Use NMAE from fitting as the initial MAE for the cache
             "fitted_params": r["fitted_params"],
-            "last_mae": float('inf')  # 重新初始化
+            "last_mae": r["nmae"],  # 使用拟合NMAE作为初始MAE
         } for r in sorted_results]
 
         print(f"Updated expressions:")
