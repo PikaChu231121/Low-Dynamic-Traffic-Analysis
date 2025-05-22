@@ -14,27 +14,34 @@ def extract_best_formulas(json_path: str, save_path: str = "predict_model.json",
     if not all_runs_data:
         raise ValueError(f"Input file {json_path} is empty or does not contain any run data.")
 
-    # 默认使用第一次运行的数据
-    # all_runs_data 是一个运行列表 (List[RunData])
-    # RunData 是一个模式列表 (List[PatternData]) -> e.g., [pattern1_results, pattern2_results, pattern3_results]
-    # PatternData 是一个公式字典列表 (List[EquationDict]) -> e.g., [{"equation": ..., "nmae": ...}, ...]
-    first_run_data = all_runs_data[0]
+    # aggregated_formulas_by_pattern 将存储每个模式（前3个）从所有运行中收集到的所有有效公式
+    # 键是模式索引 (0, 1, 2)，值是公式字典的列表
+    aggregated_formulas_by_pattern = {i: [] for i in range(3)}
 
-    # 确认第一次运行的数据包含至少3个模式的结果
-    assert len(first_run_data) >= 3, f"The first run data in {json_path} must contain results for at least 3 patterns."
+    for run_data in all_runs_data:
+        # RunData 是一个模式列表 (List[PatternData])
+        # PatternData 是一个公式字典列表 (List[EquationDict])
+        for pattern_idx in range(3): # 我们只关心前3个模式
+            if pattern_idx < len(run_data):
+                pattern_equations_list = run_data[pattern_idx]
+                # 过滤掉 "nmae" 不是数字或为 None 的条目
+                valid_equations = [
+                    e for e in pattern_equations_list
+                    if isinstance(e.get("nmae"), (float, int)) and e.get("nmae") is not None
+                ]
+                aggregated_formulas_by_pattern[pattern_idx].extend(valid_equations)
 
     result = {}
 
-    # 遍历第一次运行的前3个模式
-    for pattern_idx, pattern_equations_list in enumerate(first_run_data[:3]):
-        # pattern_equations_list 是一个包含多个公式详情的列表 (List[EquationDict])
-        # e 是一个公式详情字典 (EquationDict)
-        # 过滤掉 "nmae" 不是数字或为 None 的条目
-        valid_equations = [
-            e for e in pattern_equations_list 
-            if isinstance(e.get("nmae"), (float, int)) and e.get("nmae") is not None
-        ]
-        bests = sorted(valid_equations, key=lambda x: x["nmae"])[:n]
+    # 遍历前3个模式，从聚合数据中选择最优公式
+    for pattern_idx in range(3):
+        all_formulas_for_this_pattern = aggregated_formulas_by_pattern[pattern_idx]
+        
+        if not all_formulas_for_this_pattern:
+            bests = []
+        else:
+            # 按 nmae 排序并选择前 n 个
+            bests = sorted(all_formulas_for_this_pattern, key=lambda x: x["nmae"])[:n]
         
         result[f"pattern_{pattern_idx+1}"] = [{
             "equation": best["equation"],
