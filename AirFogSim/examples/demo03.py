@@ -14,6 +14,87 @@ from data_collector import DataCollector
 from airfogsim import AirFogSimEnv, BaseAlgorithmModule
 from airfogsim.scheduler import RewardScheduler, TaskScheduler
 
+import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib import font_manager as fm
+
+# 中文字体支持（如库中没有该字体请自行替换成其他的中文字体）
+font_path = "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"
+myfont = fm.FontProperties(fname=font_path, size=16)
+matplotlib.rcParams['axes.unicode_minus'] = False  # 避免负号显示错误
+matplotlib.rcParams['font.size'] = 16  # 放大字体
+
+# 打开交互模式
+plt.ion()
+
+# 初始化画布和子图
+fig, axs = plt.subplots(3, 2, figsize=(20, 12))  # 加宽
+fig.suptitle("三个模式的公式预测可视化", fontsize=22, fontproperties=myfont)
+
+def update_formula_visualization(formulas_history):
+    for pattern_id in range(3):
+        history = formulas_history[pattern_id]
+        if not history:
+            continue
+
+        row_ax1 = axs[pattern_id][0]
+        row_ax2 = axs[pattern_id][1]
+        row_ax1.clear()
+        row_ax2.clear()
+
+        # 最新预测信息
+        latest = history[-1]
+        eqs = latest["equations"]
+        time_point = latest["time"]
+        best_idx = latest["best_idx"]
+
+        # Top3公式
+        sorted_eqs = sorted(eqs, key=lambda x: x["nmae"])
+        top3_eqs = sorted_eqs[:3]
+
+        bar_labels = [eq["equation"] for eq in top3_eqs]
+        bar_nmaes = [eq["nmae"] for eq in top3_eqs]
+
+        row_ax1.barh(range(len(bar_labels)), bar_nmaes, color='skyblue')
+        row_ax1.set_yticks(range(len(bar_labels)))
+        row_ax1.set_yticklabels(
+            bar_labels,
+            ha='right',  # 左对齐
+            fontproperties=myfont,
+            fontsize=14  # 适当缩小字号
+        )
+        row_ax1.set_xlabel("NMAE")
+        row_ax1.set_title(f"模式 {pattern_id}：当前最优3个公式", fontsize=20, fontproperties=myfont)
+
+        # 标注当前 best_idx 的公式
+        for i, eq in enumerate(top3_eqs):
+            if eq["equation"] == eqs[best_idx]["equation"]:
+                row_ax1.text(bar_nmaes[i], i, " ← 当前最佳", fontsize=18, va='center', color='red', fontproperties=myfont)
+
+        # NMAE 曲线图
+        times = [entry["time"] for entry in history]
+        best_nmaes = [entry["equations"][entry["best_idx"]]["nmae"] for entry in history]
+
+        row_ax2.plot(times, best_nmaes, marker='o', color='orange')
+        row_ax2.set_title(f"模式 {pattern_id}：最优公式 NMAE 随时间变化", fontsize=20, fontproperties=myfont)
+        row_ax2.set_xlabel("时间", fontsize=16, fontproperties=myfont)
+        row_ax2.set_ylabel("NMAE")
+        row_ax2.grid(True)
+
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])  # 调整第一个值（左边界比例）
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
+#
+# with open("./output/runtime/runtime_predictions.json", "r") as f:
+#     runtime_data = json.load(f)
+#
+# formulas_history = runtime_data["formulas_history"]
+# update_formula_visualization(formulas_history)  # 可先单步测试
+#
+# plt.pause(10)
+# exit(0)
+
 # 获取项目根目录 (Low-Dynamic-Traffic-Analysis)，并将其设置为当前工作目录
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 airfogsim_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -213,6 +294,8 @@ while not env.isDone():
                         "equations": current_eqs,
                         "best_idx": curr_best_index
                     })
+
+                    update_formula_visualization(formulas_history)
 
                 # 再用当前x做预测
                 pred = None

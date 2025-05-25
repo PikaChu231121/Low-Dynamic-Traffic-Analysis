@@ -1,9 +1,12 @@
+import os
+import sys
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from airfogsim.scheduler import TaskScheduler
 from airfogsim import AirFogSimEvaluation
-import json
+
 
 class DataCollector:
     def __init__(self):
@@ -17,7 +20,10 @@ class DataCollector:
             'avg_U2I_rate': [],
             'compute_load_avg': [],
             'vehicle_density': [],
-            'uav_density': []
+            'uav_density': [],
+            'junction0_vehicle_count': [],
+            'junction1_vehicle_count': [],
+            'junction2_vehicle_count': []
         }
         
         # 可以添加特定区域的数据收集
@@ -43,7 +49,12 @@ class DataCollector:
         n_UAVs = len(env.UAVs)
         self.data['vehicle_count'].append(n_vehicles)
         self.data['uav_count'].append(n_UAVs)
-        
+
+        # 路口车辆计数（动态填充）
+        for j in [0, 1, 2]:
+            key = f'junction{j}_vehicle_count'
+            self.data[key].append(0)
+
         # 通信指标
         try:
             self.data['avg_V2U_rate'].append(env.getChannelAvgRate(channel_type='V2U'))
@@ -315,7 +326,7 @@ class DataCollector:
         else:
             plt.tight_layout()
             plt.show()
-    
+
     def predict_and_compare_metrics(self, formula_json_paths, output_json_path=None):
         """
         批量测试多个实验结果，支持每个 pattern 使用不同自变量，误差为 NMAE，支持 min/max/movavg。
@@ -324,8 +335,6 @@ class DataCollector:
         """
         import numpy as np
         import json
-        import sys
-        import os
         from sklearn.metrics import mean_absolute_error
         import matplotlib.pyplot as plt
 
@@ -374,6 +383,8 @@ class DataCollector:
                 dep_var = np.array(self.data[dep_name][1:min_len])  # 预测下一时隙
                 time = np.array(self.data['time'][1:min_len])
 
+                print(f"{indep_names},{dep_name},{min_len},{indep_vars},{time}，{dep_var}")
+
                 pattern_results = []
                 if isinstance(CombResults, dict) and str(pattern_idx) in CombResults:
                     formulas_list = CombResults[str(pattern_idx)]
@@ -388,13 +399,13 @@ class DataCollector:
                     eq = formula['equation']
                     params = formula['fitted_params']
                     preds = []
-                    for i in range(min_len-1):
-                        local_vars = {f'x{j+1}': indep_vars[j][i] for j in range(len(indep_vars))}
+                    for i in range(min_len - 1):
+                        local_vars = {f'x{j + 1}': indep_vars[j][i] for j in range(len(indep_vars))}
                         local_vars['c'] = params
                         local_vars['np'] = np
                         local_vars['min'] = np.minimum
                         local_vars['max'] = np.maximum
-                        local_vars['movavg'] = lambda p, k: movavg(indep_vars[p-1][:i], k)
+                        local_vars['movavg'] = lambda p, k: movavg(indep_vars[p - 1][:i], k)
                         local_vars['log'] = np.log
                         local_vars['exp'] = np.exp
                         local_vars['sqrt'] = np.sqrt
@@ -438,6 +449,7 @@ class DataCollector:
             plt.tight_layout(rect=[0, 0, 1, 0.93])
             plt.suptitle(f'Run {run_idx+1} - Prediction vs Actual', y=1.00)
             plt.show()
+            plt.pause(10)
             all_runs_results.append(run_result)
 
         if output_json_path:
@@ -445,3 +457,161 @@ class DataCollector:
                 json.dump(all_runs_results, f, indent=2)
         return all_runs_results
 
+    def predict_and_compare_metrics_live(self, formula_json_paths):
+        """
+        实时更新版本的核心逻辑（完整单函数版）
+        首次调用时初始化绘图，后续调用仅更新数据
+        该函数主要逻辑与predict_and_compare_metrics一模一样，后续可以考虑重构
+        """
+        import numpy as np
+        import json
+        from sklearn.metrics import mean_absolute_error
+        import matplotlib.pyplot as plt
+        from pathlib import Path
+
+        # 获取当前文件的绝对路径
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # 获取项目根目录的路径（假设是 Low-Dynamic-Traffic-Analysis）
+        project_root = os.path.abspath(os.path.join(current_dir, '../../'))
+        # 将 Prediction 目录添加到 Python 路径
+        sys.path.append(os.path.join(project_root, 'Prediction'))
+        from helper import movavg  # type: ignore
+
+        # 静态变量存储绘图状态（通过字典实现）
+        if not hasattr(self, '_live_plot_state'):
+            # 初始化绘图
+            self._live_plot_state = {
+                'fig': plt.figure(figsize=(18, 7)),
+                'axes': [],
+                'lines_actual': [],
+                'lines_pred': [],
+                'initialized': False
+            }
+            fig = self._live_plot_state['fig']
+
+            # 创建三个子图
+            for pattern_idx in range(3):
+                ax = fig.add_subplot(1, 3, pattern_idx + 1)
+                ax.set_title(f'Pattern {pattern_idx + 1}')
+                ax.grid(True)
+
+                # 实际值曲线（固定黑色）
+                line_actual, = ax.plot([], [], 'k-', label='Actual', linewidth=2)
+                self._live_plot_state['lines_actual'].append(line_actual)
+
+                # 预测曲线容器（最多显示3条）
+                pred_lines = []
+                for _ in range(3):
+                    line, = ax.plot([], [], alpha=0.7)
+                    pred_lines.append(line)
+                self._live_plot_state['lines_pred'].append(pred_lines)
+
+                ax.legend()
+                self._live_plot_state['axes'].append(ax)
+
+            plt.ion()  # 开启交互模式
+            plt.show(block=False)
+            self._live_plot_state['initialized'] = True
+
+        # 变量映射配置
+        indep_var_map = [
+            ['task_success_ratio', 'vehicle_density', 'uav_density',
+             'junction0_vehicle_count', 'junction1_vehicle_count', 'junction2_vehicle_count'],
+            ['vehicle_density', 'uav_density', 'compute_load_avg'],
+            ['avg_V2U_rate', 'avg_V2I_rate', 'compute_load_avg'],
+        ]
+        dep_var_map = [
+            'compute_load_avg',
+            'avg_V2U_rate',
+            'task_success_ratio'
+        ]
+
+        # 主处理逻辑（与原函数保持一致）
+        for run_idx, formula_json_path in enumerate(formula_json_paths):
+            if Path(formula_json_path).stat().st_size == 0:
+                print(f"警告: {formula_json_path} 是空文件，已返回空字典")
+                formulas = {}
+                continue
+
+            with open(formula_json_path, 'r') as f:
+                formulas = json.load(f)
+
+            if isinstance(formulas, dict) and 'CombResults' in formulas:
+                CombResults = formulas['CombResults']
+            else:
+                CombResults = formulas
+
+            for pattern_idx in range(3):
+                # 获取数据（与原函数相同）
+                indep_names = indep_var_map[pattern_idx]
+                dep_name = dep_var_map[pattern_idx]
+                min_len = min([len(self.data[n]) for n in indep_names + [dep_name]])
+                indep_vars = [np.array(self.data[n][:min_len]) for n in indep_names]
+                dep_var = np.array(self.data[dep_name][1:min_len])  # 预测下一时隙
+                time = np.array(self.data['time'][1:min_len])
+
+                print(f"{indep_names},{dep_name},{min_len},{indep_vars},{time}，{dep_var}")
+                # 获取公式列表（与原函数相同）
+                if isinstance(CombResults, dict) and str(pattern_idx) in CombResults:
+                    formulas_list = CombResults[str(pattern_idx)]
+                elif isinstance(CombResults, list) and len(CombResults) > pattern_idx:
+                    formulas_list = CombResults[pattern_idx]
+                else:
+                    formulas_list = []
+
+                # 更新实际值曲线
+                self._live_plot_state['lines_actual'][pattern_idx].set_data(time, dep_var)
+                ax = self._live_plot_state['axes'][pattern_idx]
+
+                print(f"Pattern {pattern_idx}已更新曲线")
+                # 更新预测曲线
+                for eq_idx, formula in enumerate(formulas_list):
+                    eq = formula['equation']
+                    params = formula['fitted_params']
+                    preds = []
+                    for i in range(min_len - 1):
+                        local_vars = {f'x{j + 1}': indep_vars[j][i] for j in range(len(indep_vars))}
+                        local_vars['c'] = params
+                        local_vars['np'] = np
+                        local_vars['min'] = np.minimum
+                        local_vars['max'] = np.maximum
+                        local_vars['movavg'] = lambda p, k: movavg(indep_vars[p - 1][:i], k)
+                        local_vars['log'] = np.log
+                        local_vars['exp'] = np.exp
+                        local_vars['sqrt'] = np.sqrt
+                        local_vars['cbrt'] = np.cbrt
+                        try:
+                            pred = eval(eq, {}, local_vars)
+                        except Exception:
+                            pred = np.nan
+                        preds.append(pred)
+                    arr_pred = np.array(preds)
+                    arr_actual = dep_var
+                    mask = ~np.isnan(arr_pred)
+                    if np.sum(mask) > 0:
+                        # 使用 min-max 范围计算 NMAE
+                        actual_min = np.min(arr_actual[mask])
+                        actual_max = np.max(arr_actual[mask])
+                        actual_range = actual_max - actual_min
+                        if actual_range > 0:
+                            mae = mean_absolute_error(arr_actual[mask], arr_pred[mask])
+                            nmae = mae / actual_range
+                        else:
+                            nmae = float('inf')  # 如果范围为 0，则设置为无穷大
+                    else:
+                        nmae = float('inf')
+
+                    # 更新曲线数据
+                    line = self._live_plot_state['lines_pred'][pattern_idx][eq_idx]
+                    line.set_data(time, arr_pred)
+                    line.set_label(f'Pred{eq_idx + 1} (NMAE={nmae:.3g})')
+
+                # 动态调整坐标轴
+                ax.relim()
+                ax.autoscale_view()
+                ax.legend()
+
+        # 刷新画布
+        self._live_plot_state['fig'].canvas.draw_idle()
+        self._live_plot_state['fig'].canvas.flush_events()
+        plt.pause(0.01)
