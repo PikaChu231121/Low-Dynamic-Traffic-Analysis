@@ -28,8 +28,24 @@ matplotlib.rcParams['font.size'] = 16  # 放大字体
 plt.ion()
 
 # 初始化画布和子图
-fig, axs = plt.subplots(3, 2, figsize=(20, 12))  # 加宽
+fig, axs = plt.subplots(3, 3,
+                        figsize=(24, 14),
+                        gridspec_kw={'width_ratios': [1.4, 0.8, 1.2]},
+                        constrained_layout=True)
+
 fig.suptitle("三个模式的公式预测可视化", fontsize=22, fontproperties=myfont)
+import re
+
+def replace_params(equation, params):
+    """将 c[0], c[1], ... 替换为真实参数值（保留小数）"""
+    def repl(match):
+        idx = int(match.group(1))
+        return f"{params[idx]:.4f}" if idx < len(params) else match.group(0)
+    return re.sub(r"c\[(\d+)]", repl, equation)
+
+def wrap_formula(equation, max_len=50):
+    """在指定长度后插入换行符以换行显示"""
+    return '\n'.join([equation[i:i+max_len] for i in range(0, len(equation), max_len)])
 
 def update_formula_visualization(formulas_history):
     for pattern_id in range(3):
@@ -37,51 +53,72 @@ def update_formula_visualization(formulas_history):
         if not history:
             continue
 
-        row_ax1 = axs[pattern_id][0]
-        row_ax2 = axs[pattern_id][1]
-        row_ax1.clear()
-        row_ax2.clear()
+        ax_bar = axs[pattern_id][0]   # 第1列：柱状图
+        ax_line = axs[pattern_id][1]  # 第2列：NMAE趋势曲线
+        ax_text = axs[pattern_id][2]  # 第3列：公式历史记录
 
-        # 最新预测信息
+        ax_bar.clear()
+        ax_line.clear()
+        ax_text.clear()
+
         latest = history[-1]
         eqs = latest["equations"]
         time_point = latest["time"]
         best_idx = latest["best_idx"]
 
-        # Top3公式
+        # === 1. 当前 Top3 的 NMAE 条形图 ===
         sorted_eqs = sorted(eqs, key=lambda x: x["nmae"])
         top3_eqs = sorted_eqs[:3]
 
-        bar_labels = [eq["equation"] for eq in top3_eqs]
+        bar_labels = [wrap_formula(eq["equation"], max_len=50) for eq in top3_eqs]
         bar_nmaes = [eq["nmae"] for eq in top3_eqs]
 
-        row_ax1.barh(range(len(bar_labels)), bar_nmaes, color='skyblue')
-        row_ax1.set_yticks(range(len(bar_labels)))
-        row_ax1.set_yticklabels(
+        ax_bar.barh(range(len(bar_labels)), bar_nmaes, color='skyblue')
+        ax_bar.set_yticks(range(len(bar_labels)))
+        ax_bar.set_yticklabels(
             bar_labels,
-            ha='right',  # 左对齐
+            ha='right',
             fontproperties=myfont,
-            fontsize=14  # 适当缩小字号
+            fontsize=12
         )
-        row_ax1.set_xlabel("NMAE")
-        row_ax1.set_title(f"模式 {pattern_id}：当前最优3个公式", fontsize=20, fontproperties=myfont)
+        ax_bar.set_xlabel("NMAE")
+        ax_bar.set_title(f"模式 {pattern_id}：Top3 公式", fontsize=16, fontproperties=myfont)
 
-        # 标注当前 best_idx 的公式
         for i, eq in enumerate(top3_eqs):
             if eq["equation"] == eqs[best_idx]["equation"]:
-                row_ax1.text(bar_nmaes[i], i, " ← 当前最佳", fontsize=18, va='center', color='red', fontproperties=myfont)
+                ax_bar.text(bar_nmaes[i], i, " ← 当前最佳", fontsize=14, va='center', color='red', fontproperties=myfont)
 
-        # NMAE 曲线图
+        # === 2. 最优 NMAE 随时间变化曲线图 ===
         times = [entry["time"] for entry in history]
         best_nmaes = [entry["equations"][entry["best_idx"]]["nmae"] for entry in history]
 
-        row_ax2.plot(times, best_nmaes, marker='o', color='orange')
-        row_ax2.set_title(f"模式 {pattern_id}：最优公式 NMAE 随时间变化", fontsize=20, fontproperties=myfont)
-        row_ax2.set_xlabel("时间", fontsize=16, fontproperties=myfont)
-        row_ax2.set_ylabel("NMAE")
-        row_ax2.grid(True)
+        ax_line.plot(times, best_nmaes, marker='o', color='orange')
+        ax_line.set_title(f"模式 {pattern_id}：最优公式 NMAE 曲线", fontsize=16, fontproperties=myfont)
+        ax_line.set_xlabel("时间", fontsize=12, fontproperties=myfont)
+        ax_line.set_ylabel("NMAE")
+        ax_line.grid(True)
 
-    fig.tight_layout(rect=[0, 0.03, 1, 0.95])  # 调整第一个值（左边界比例）
+        # === 3. 公式历史记录文本展示 ===
+        ax_text.axis("off")
+        y = 1.0
+        recent_history = history[-6:]  # 可改为更多
+
+        for entry in reversed(recent_history):
+            t = entry["time"]
+            eqs = entry["equations"]
+            best = entry["best_idx"]
+
+            ax_text.text(0, y, f"时间 {t:.1f}：",ha='left', fontsize=14, fontweight='bold', va='top', fontproperties=myfont)
+            y -= 0.08  # 加大行间距
+
+            for i, eq in enumerate(eqs):
+                eq_str = replace_params(eq["equation"], eq["fitted_params"])
+                nmae = eq["nmae"]
+                prefix = "【最佳】" if i == best else ""
+                line = f"{prefix}公式 {i+1}: {eq_str} | NMAE: {nmae:.5f}"
+                ax_text.text(0.02, y, line,ha='left', fontsize=12, va='top', color='red' if i == best else 'black', fontproperties=myfont)
+                y -= 0.10  # 每条公式之间再间隔开一些
+
     fig.canvas.draw()
     fig.canvas.flush_events()
 
