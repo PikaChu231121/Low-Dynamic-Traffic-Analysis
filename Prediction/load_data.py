@@ -15,10 +15,9 @@ def load_data(data_path: str) -> tuple[list[list[str]]]:
     y1 = all_values[7][1:]  # compute_load_avg
     x11 = all_values[1][:len(y1)]   # current_task_success_ratio
     x12 = all_values[8][:len(y1)]   # current_vehicle_density
-    x13 = all_values[9][:len(y1)]   # current_uav_density
-    x14 = all_values[10][:len(y1)]  # junction_0_vehicle_count
-    x15 = all_values[11][:len(y1)]  # junction_1_vehicle_count
-    x16 = all_values[12][:len(y1)]  # junction_2_vehicle_count
+    x13 = all_values[4][:len(y1)]   # current_avg_V2U_rate
+    x14 = all_values[7][:len(y1)]   # current_compute_load_avg
+    x15 = [0] + all_values[7][:len(y1) - 1]  # previous_compute_load_avg
 
     y2 = all_values[4][1:]  # avg_V2U_rate
     x21 = all_values[8][:len(y2)]   # current_vehicle_density
@@ -31,7 +30,7 @@ def load_data(data_path: str) -> tuple[list[list[str]]]:
     x33 = all_values[7][:len(y3)]   # current_compute_load_avg
 
     dep_vars = list(map(str, [y1, y2, y3]))
-    indep_vars = list(map(list, (map(str, [x11, x12, x13, x14, x15, x16]),
+    indep_vars = list(map(list, (map(str, [x11, x12, x13, x14, x15]),
                                     map(str, [x21, x22, x23]),
                                     map(str, [x31, x32, x33]))))
     

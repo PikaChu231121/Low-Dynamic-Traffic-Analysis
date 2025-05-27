@@ -53,28 +53,33 @@ class airFog:
         total_chain_run_time = 0
 
         # Initial generation
-        start_time = time.time()
-        with get_openai_callback() as cb:
-            StartupOutput = self.equation_generation_chain.run(
-                dep1=self.dep_vars_rounded[0], indep1=self.indep_vars_rounded[0],
-                dep2=self.dep_vars_rounded[1], indep2=self.indep_vars_rounded[1],
-                dep3=self.dep_vars_rounded[2], indep3=self.indep_vars_rounded[2],
-                Neq=self.N, context=self.context)
-        end_time = time.time()           
-        total_chain_run_time += end_time - start_time
-        self.add_usage_data(cb)
-
-        parts = StartupOutput.split("<EXP>")
         LLMithoughts = ''
         startupEquationsStr = ''
-        startupEquations = [[]] * 3
-        if len(parts) < 2:
-            print("Warning: <EXP> not found or incorrectly placed in the response.")
-            LLMithoughts = StartupOutput.strip()
-        else:
-            LLMithoughts = parts[0].strip()
-            startupEquationsStr = parts[1].strip()
-            startupEquations = format_and_parse_expression_matrix(startupEquationsStr)  # Parse the list of equations
+        while True:
+            start_time = time.time()
+            with get_openai_callback() as cb:
+                StartupOutput = self.equation_generation_chain.run(
+                    dep1=self.dep_vars_rounded[0], indep1=self.indep_vars_rounded[0],
+                    dep2=self.dep_vars_rounded[1], indep2=self.indep_vars_rounded[1],
+                    dep3=self.dep_vars_rounded[2], indep3=self.indep_vars_rounded[2],
+                    Neq=self.N, context=self.context)
+            end_time = time.time()           
+            total_chain_run_time += end_time - start_time
+            self.add_usage_data(cb)
+
+            parts = StartupOutput.split("<EXP>")
+            startupEquations = [[]] * 3
+            if len(parts) < 2:
+                print("Warning: <EXP> not found or incorrectly placed in the response.")
+                LLMithoughts = StartupOutput.strip()
+            else:
+                LLMithoughts = parts[0].strip()
+                startupEquationsStr = parts[1].strip()
+                try:
+                    startupEquations = format_and_parse_expression_matrix(startupEquationsStr)  # Parse the list of equations
+                    break
+                except:
+                    pass
         
         LLMrawExpressions.append(startupEquationsStr)
         self.all_LLMthoughts.append(LLMithoughts)
@@ -86,8 +91,9 @@ class airFog:
             self.all_expressions[i].extend(formatted_equations)
             startup_equation_analysis = self.optimizer.fitting_constants(
                 self.indep_vars[i], self.dep_vars[i], formatted_equations)
-            # Prune the results whose nmae > 1
-            valid_startupEquations.append([analysis for analysis in startup_equation_analysis if analysis['nmae'] < 1])
+            # Prune the results whose nmae > 0.5
+            valid_startupEquations.append([analysis for analysis in startup_equation_analysis if analysis['nmae'] <= 0.5])
+            print(f"Give up equations whose nmae > 0.5: {[analysis for analysis in startup_equation_analysis if analysis['nmae'] > 0.5]}")
         
         # Plot the initial results
         self.plot_predictions(self.indep_vars, self.dep_vars, valid_startupEquations)
@@ -112,28 +118,33 @@ class airFog:
 
         # Iterative refinement
         for iter_num in range(total_iterations):
-            start_time = time.time()
-            with get_openai_callback() as cb:
-                IterOutput = self.equation_iteration_chain.run(
-                    dep1=self.dep_vars_rounded[0], indep1=self.indep_vars_rounded[0],
-                    dep2=self.dep_vars_rounded[1], indep2=self.indep_vars_rounded[1],
-                    dep3=self.dep_vars_rounded[2], indep3=self.indep_vars_rounded[2],
-                    ResultsAnalysis=self.results_list, Neq=self.N, context=self.context)
-            end_time = time.time()
-            total_chain_run_time += end_time - start_time
-            self.add_usage_data(cb)
-
-            parts = IterOutput.split("<EXP>")
             LLMthoughts = ''
             IterEquationsStr = ''
-            IterEquations = [[]] * 3
-            if len(parts) < 2:
-                print("Warning: <EXP> not found or incorrectly placed in the response.")
-                LLMthoughts = IterOutput.strip()
-            else:
-                LLMthoughts = parts[0].strip()
-                IterEquationsStr = parts[1].strip()
-                IterEquations = format_and_parse_expression_matrix(IterEquationsStr)  # Parse the list of equations
+            while True:
+                start_time = time.time()
+                with get_openai_callback() as cb:
+                    IterOutput = self.equation_iteration_chain.run(
+                        dep1=self.dep_vars_rounded[0], indep1=self.indep_vars_rounded[0],
+                        dep2=self.dep_vars_rounded[1], indep2=self.indep_vars_rounded[1],
+                        dep3=self.dep_vars_rounded[2], indep3=self.indep_vars_rounded[2],
+                        ResultsAnalysis=self.results_list, Neq=self.N, context=self.context)
+                end_time = time.time()
+                total_chain_run_time += end_time - start_time
+                self.add_usage_data(cb)
+
+                parts = IterOutput.split("<EXP>")
+                IterEquations = [[]] * 3
+                if len(parts) < 2:
+                    print("Warning: <EXP> not found or incorrectly placed in the response.")
+                    LLMthoughts = IterOutput.strip()
+                else:
+                    LLMthoughts = parts[0].strip()
+                    IterEquationsStr = parts[1].strip()
+                    try:
+                        IterEquations = format_and_parse_expression_matrix(IterEquationsStr)  # Parse the list of equations
+                        break
+                    except:
+                        pass
             
             LLMrawExpressions.append(IterEquationsStr)
             self.all_LLMthoughts.append(LLMthoughts)
@@ -145,8 +156,9 @@ class airFog:
                 self.all_expressions[i].extend(formatted_equations)
                 iter_equation_analysis = self.optimizer.fitting_constants(
                     self.indep_vars[i], self.dep_vars[i], formatted_equations)
-                # Prune the results whose nmae > 1
-                valid_iterEquations.append([analysis for analysis in iter_equation_analysis if analysis['nmae'] < 1])
+                # Prune the results whose nmae > 0.5
+                valid_iterEquations.append([analysis for analysis in iter_equation_analysis if analysis['nmae'] <= 0.5])
+                print(f"Give up equations whose nmae > 0.5: {[analysis for analysis in iter_equation_analysis if analysis['nmae'] > 0.5]}")
 
             # Plot the results
             self.plot_predictions(self.indep_vars, self.dep_vars, valid_iterEquations, iter_num)

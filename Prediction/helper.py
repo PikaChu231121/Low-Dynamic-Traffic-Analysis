@@ -226,7 +226,7 @@ def format_and_parse_expression_matrix(expression_matrix_string: str):
     except Exception:
         pass
 
-    raise ValueError("Unsupported expression format")
+    raise ValueError(f"Unsupported expression format:\n{expression_matrix_string}")
 
 def extract_latex_arrays(expr_str: str) -> List[List[str]]:
     expr_str = expr_str.strip()
