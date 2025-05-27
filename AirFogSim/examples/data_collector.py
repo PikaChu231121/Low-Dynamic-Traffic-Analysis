@@ -327,7 +327,7 @@ class DataCollector:
             plt.tight_layout()
             plt.show()
 
-    def predict_and_compare_metrics(self, formula_json_paths, output_json_path=None):
+    def predict_and_compare_metrics(self, formula_json_paths, output_json_path=None, output_image_path=None):
         """
         批量测试多个实验结果，支持每个 pattern 使用不同自变量，误差为 NMAE，支持 min/max/movavg。
         formula_json_paths: list of json file paths (每个实验一个)
@@ -347,7 +347,7 @@ class DataCollector:
         from helper import movavg  # type: ignore
 
         indep_var_map = [
-            ['task_success_ratio', 'vehicle_density', 'uav_density', 'junction0_vehicle_count', 'junction1_vehicle_count', 'junction2_vehicle_count'],
+            ['task_success_ratio', 'vehicle_density', 'avg_V2U_rate', 'compute_load_avg'],
             ['vehicle_density', 'uav_density', 'compute_load_avg'],
             ['avg_V2U_rate', 'avg_V2I_rate', 'compute_load_avg'],
         ]
@@ -380,6 +380,8 @@ class DataCollector:
                 dep_name = dep_var_map[pattern_idx]
                 min_len = min([len(self.data[n]) for n in indep_names + [dep_name]])
                 indep_vars = [np.array(self.data[n][:min_len]) for n in indep_names]
+                if pattern_idx == 0:
+                    indep_vars.append(np.array([0] + self.data['compute_load_avg'][:min_len - 1]))  # previous_compute_load_avg
                 dep_var = np.array(self.data[dep_name][1:min_len])  # 预测下一时隙
                 time = np.array(self.data['time'][1:min_len])
 
@@ -452,9 +454,13 @@ class DataCollector:
             plt.pause(10)
             all_runs_results.append(run_result)
 
+            if output_image_path:
+                plt.savefig(os.path.join(output_image_path, f'run{run_idx+1}_prediction.png'), dpi=300, bbox_inches='tight')
+
         if output_json_path:
             with open(output_json_path, 'w') as f:
                 json.dump(all_runs_results, f, indent=2)
+
         return all_runs_results
 
     def predict_and_compare_metrics_live(self, formula_json_paths):
@@ -515,8 +521,7 @@ class DataCollector:
 
         # 变量映射配置
         indep_var_map = [
-            ['task_success_ratio', 'vehicle_density', 'uav_density',
-             'junction0_vehicle_count', 'junction1_vehicle_count', 'junction2_vehicle_count'],
+            ['task_success_ratio', 'vehicle_density', 'avg_V2U_rate', 'compute_load_avg'],
             ['vehicle_density', 'uav_density', 'compute_load_avg'],
             ['avg_V2U_rate', 'avg_V2I_rate', 'compute_load_avg'],
         ]
@@ -547,21 +552,35 @@ class DataCollector:
                 dep_name = dep_var_map[pattern_idx]
                 min_len = min([len(self.data[n]) for n in indep_names + [dep_name]])
                 indep_vars = [np.array(self.data[n][:min_len]) for n in indep_names]
+                if pattern_idx == 0:
+                    indep_vars.append(np.array([0] + self.data['compute_load_avg'][:min_len - 1]))  # previous_compute_load_avg
                 dep_var = np.array(self.data[dep_name][1:min_len])  # 预测下一时隙
                 time = np.array(self.data['time'][1:min_len])
 
                 print(f"{indep_names},{dep_name},{min_len},{indep_vars},{time}，{dep_var}")
-                # 获取公式列表（与原函数相同）
+                # 获取公式列表
                 if isinstance(CombResults, dict) and str(pattern_idx) in CombResults:
                     formulas_list = CombResults[str(pattern_idx)]
                 elif isinstance(CombResults, list) and len(CombResults) > pattern_idx:
                     formulas_list = CombResults[pattern_idx]
                 else:
                     formulas_list = []
-
+                
+                # 添加获取 ax 的语句，确保 ax 已定义
+                ax = self._live_plot_state['axes'][pattern_idx]
+                # 动态更新预测曲线数量
+                current_pred_lines = self._live_plot_state['lines_pred'][pattern_idx]
+                if len(current_pred_lines) != len(formulas_list):
+                    for line in current_pred_lines:
+                        line.remove()
+                    current_pred_lines = []
+                    for eq_idx in range(len(formulas_list)):
+                        line, = ax.plot([], [], alpha=0.7, label=f'Pred {eq_idx+1}')
+                        current_pred_lines.append(line)
+                    self._live_plot_state['lines_pred'][pattern_idx] = current_pred_lines
+                
                 # 更新实际值曲线
                 self._live_plot_state['lines_actual'][pattern_idx].set_data(time, dep_var)
-                ax = self._live_plot_state['axes'][pattern_idx]
 
                 print(f"Pattern {pattern_idx}已更新曲线")
                 # 更新预测曲线
@@ -601,10 +620,8 @@ class DataCollector:
                     else:
                         nmae = float('inf')
 
-                    # 更新曲线数据
-                    line = self._live_plot_state['lines_pred'][pattern_idx][eq_idx]
-                    line.set_data(time, arr_pred)
-                    line.set_label(f'Pred{eq_idx + 1} (NMAE={nmae:.3g})')
+                    current_pred_lines[eq_idx].set_data(time, arr_pred)
+                    current_pred_lines[eq_idx].set_label(f'Pred {eq_idx+1} (NMAE={nmae:.3g})')
 
                 # 动态调整坐标轴
                 ax.relim()

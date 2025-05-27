@@ -59,13 +59,13 @@ if junctions:
         data_collector.area_specific_data[f'junction_{i}'] = area_bounds
 
 formula_json_paths = [
-    # os.path.join(os.path.dirname(__file__), '../output/runtime/final_formulas.json'),
-    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run1.json'),
-    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run2.json'),
-    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run3.json')
+    os.path.join(os.path.dirname(__file__), '../output/runtime/final_formulas.json'),
+    # os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run1.json'),
+    # os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run2.json'),
+    # os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run3.json')
 ]
-output_json_path = os.path.join(os.path.dirname(__file__), '../output/prediction/all_runs_mae.json')
-output_image_path = os.path.join(os.path.dirname(__file__), '../output/prediction')
+output_json_path = os.path.join(os.path.dirname(__file__), '../output/runtime/final_nmae.json')
+output_image_path = os.path.join(os.path.dirname(__file__), '../output/runtime')
 os.makedirs(os.path.dirname(output_json_path), exist_ok=True)
 
 # 模拟执行
@@ -87,10 +87,10 @@ while not env.isDone():
     # 每10个时间步收集一次数据并绘图
     if int(env.simulation_time * 10) % 10 == 0:
         data_collector.collect(env, algorithm_module)
-        # # 实时绘图
-        # data_collector.predict_and_compare_metrics_live(
-        #     formula_json_paths=formula_json_paths
-        # )
+        # 实时绘图
+        data_collector.predict_and_compare_metrics_live(
+            formula_json_paths=formula_json_paths
+        )
     print(f"Simulation time: {env.simulation_time:.2f}, Reward: {accumulated_reward:.2f}", end='\r')
 
     env.render()  # 渲染可视化
