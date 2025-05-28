@@ -1,0 +1,59 @@
+[
+  [],
+  [
+    {
+      "equation": "x1*x3",
+      "complexity": 3,
+      "nmae": 0.6891827312271223,
+      "fitted_params": []
+    },
+    {
+      "equation": "x1*exp(-x3)",
+      "complexity": 6,
+      "nmae": 0.3647359674802897,
+      "fitted_params": []
+    },
+    {
+      "equation": "log(x1+x2)",
+      "complexity": 4,
+      "nmae": 0.1554497691010926,
+      "fitted_params": []
+    },
+    {
+      "equation": "log(x1+c[0])",
+      "complexity": 4,
+      "nmae": 0.12154046115948837,
+      "fitted_params": [
+        12.091662278622696
+      ]
+    }
+  ],
+  [
+    {
+      "equation": "min(1,max(0,log(x1)+x2))",
+      "complexity": 4,
+      "nmae": 0.9186837301238397,
+      "fitted_params": []
+    },
+    {
+      "equation": "min(1,max(0,x1+x2))",
+      "complexity": 3,
+      "nmae": 0.8364948597950002,
+      "fitted_params": []
+    },
+    {
+      "equation": "min(1,max(0,x2/(x3+c[0])))",
+      "complexity": 5,
+      "nmae": 0.8067801821887782,
+      "fitted_params": [
+        0.24413878750698498
+      ]
+    },
+    {
+      "equation": "1/(1+exp(-x1))",
+      "complexity": 8,
+      "nmae": 0.3153192998190748,
+      "fitted_params": []
+    }
+  ]
+]
