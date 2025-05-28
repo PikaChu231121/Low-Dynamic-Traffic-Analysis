@@ -46,28 +46,71 @@ class FittingOptimizerAirFog:
         
     def fitting_constants(self, indep_vars, dep_var, expressions):
         results = []
-        data = np.column_stack([var.reshape(-1, 1) for var in indep_vars] + [dep_var.reshape(-1, 1)])
 
-        # Parse expressions as JSON if it's a string
+        # Prepare data: each column is one variable
+        try:
+            data = np.column_stack([var.reshape(-1, 1) for var in indep_vars] + [dep_var.reshape(-1, 1)])
+        except Exception as e:
+            print("Data column stack failed:", e)
+            return []
+
+        # Parse expressions if in string form
         if isinstance(expressions, str):
             expressions = json.loads(expressions)
-        
+
         for equation in expressions:
             equation_indices = self.get_equation_indices(equation)
-            initial_val = [1] * len(equation_indices)
+            num_constants = len(equation_indices)
+
+            # Infer bounds for each constant based on expression content
+            bounds = []
+            for i in range(num_constants):
+                if any(op in equation for op in ['exp(', 'log(', 'sqrt(', '/']):
+                    bounds.append((-5.0, 5.0))
+                else:
+                    bounds.append((-10.0, 10.0))
+
+            # Check validity
+            initial_val = [1.0] * num_constants
             if not self.is_valid_equation(equation, data, initial_val):
-                result_dict = {'equation': equation, 'complexity': calculate_complexity(equation), 'nmae': float('inf')}
-                results.append(result_dict)
+                results.append({
+                    'equation': equation,
+                    'complexity': float('inf'),
+                    'nmae': float('inf'),
+                    'fitted_params': []
+                })
                 continue
+
+            # Perform optimization
             try:
-                result = opt.basinhopping(func=self.equation_error, x0=initial_val,
-                                          minimizer_kwargs={"method": "Nelder-Mead", "args": (equation, data)})
+                result = opt.differential_evolution(
+                    func=lambda c: self.equation_error(c, equation, data),
+                    bounds=bounds,
+                    strategy='best1bin',
+                    maxiter=500,
+                    tol=1e-6,
+                    polish=True
+                )
                 fitted_params = result.x
                 nmae = self.equation_error(fitted_params, equation, data)
                 complexity = calculate_complexity(equation)
-                results.append({'equation': equation, 'complexity': complexity, 'nmae': nmae, 'fitted_params': fitted_params.tolist()})
+
+                results.append({
+                    'equation': equation,
+                    'complexity': complexity,
+                    'nmae': nmae,
+                    'fitted_params': fitted_params.tolist()
+                })
+
             except Exception as e:
-                results.append({'equation': equation, 'complexity': float('inf'), 'nmae': float('inf'), 'fitted_params': []})
-        
+                print(f"Optimization failed for equation: {equation}, error: {e}")
+                results.append({
+                    'equation': equation,
+                    'complexity': float('inf'),
+                    'nmae': float('inf'),
+                    'fitted_params': []
+                })
+
+        # Sort by NMAE then complexity
         results.sort(key=lambda x: (x['nmae'], x['complexity']))
         return results
