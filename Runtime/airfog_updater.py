@@ -97,7 +97,7 @@ class AirFogRuntimeUpdater:
         if valid_eqs:
             self.best_expression_index = min(valid_eqs, key=lambda i: self.top_equations[i]["last_mae"])
         else:
-            self.best_expression_index = 0
+            self.best_expression_index = -1
 
     def retrain_expression(self):
         """ 使用历史数据 + LLM + optimizer 重建表达式 """
@@ -122,7 +122,11 @@ class AirFogRuntimeUpdater:
             return
 
         thoughts, expr_str = parts[0].strip(), parts[1].strip()
-        new_exprs = format_expressions(format_and_parse_expressions(expr_str))
+        try:
+            new_exprs = format_expressions(format_and_parse_expressions(expr_str))
+        except Exception as e:
+            print(f"Error parsing new expressions: {e}\nSkipping update.")
+            return
         print("LLM thoughts:")
         print(thoughts)
 

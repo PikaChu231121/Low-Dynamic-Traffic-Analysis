@@ -18,7 +18,7 @@ Your job is to find expressions for 3 patterns that approximately describe the d
 
 Here's the dataset:
 Dependent variable of the first pattern is y: {dep1} 
-Independent variables of the first pattern are (x1, x2, x3): {indep1}.
+Independent variables of the first pattern are (x1, x2, x3, x4, x5): {indep1}.
 Dependent variable of the second pattern is y: {dep2}
 Independent variables of the second pattern are (x1, x2, x3): {indep2}.
 Dependent variable of the third pattern is y: {dep3}
@@ -47,7 +47,7 @@ Based on your previous suggestions, here is an analysis of the accuracy (measure
 Suggest {Neq} new equations for each 3 patterns minimizing both complexity and loss. Diverse ones are likely to be helpful. 
 Here's the dataset:
 Dependent variable of the first pattern is y: {dep1} 
-Independent variables of the first pattern are (x1, x2, x3): {indep1}.
+Independent variables of the first pattern are (x1, x2, x3, x4, x5): {indep1}.
 Dependent variable of the second pattern is y: {dep2}
 Independent variables of the second pattern are (x1, x2, x3): {indep2}.
 Dependent variable of the third pattern is y: {dep3}

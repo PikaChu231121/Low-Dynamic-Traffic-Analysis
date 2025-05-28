@@ -19,6 +19,7 @@ import matplotlib
 from matplotlib import font_manager as fm
 
 # 中文字体支持（如库中没有该字体请自行替换成其他的中文字体）
+matplotlib.use('Qt5Agg')  # 使用Qt5后端以支持中文显示
 font_path = "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"
 myfont = fm.FontProperties(fname=font_path, size=16)
 matplotlib.rcParams['axes.unicode_minus'] = False  # 避免负号显示错误
@@ -205,7 +206,7 @@ if runtime_available:
 
 # 定义输入变量映射
 indep_var_map = [
-    ['task_success_ratio', 'vehicle_density', 'uav_density', 'junction_0_vehicle_count', 'junction_1_vehicle_count', 'junction_2_vehicle_count'],
+    ['task_success_ratio', 'vehicle_density', 'avg_V2U_rate', 'compute_load_avg'],
     ['vehicle_density', 'uav_density', 'compute_load_avg'],
     ['avg_V2U_rate', 'avg_V2I_rate', 'compute_load_avg'],
 ]
@@ -227,7 +228,7 @@ formulas_history = [[] for _ in range(3)]  # 保存公式历史
 # 模拟执行
 accumulated_reward = 0
 last_values = {}  # 存储上一次的数据值
-update_interval = 5.0  # 每隔多少个时间单位更新一次模型
+update_interval = 1.0  # 每隔多少个时间单位更新一次模型
 
 last_x = [None] * 3
 last_y = [None] * 3
@@ -294,6 +295,17 @@ while not env.isDone():
                         print(f"警告: 模式 {pattern_id} 的输入 '{name}' 在时间 {env.simulation_time:.2f} 不可用或为空。跳过此更新。")
                         valid_inputs = False
                         break
+                if pattern_id == 0:
+                    if 'compute_load_avg' in data_collector.data and data_collector.data['compute_load_avg']:
+                        history = data_collector.data['compute_load_avg'][-2] if len(data_collector.data['compute_load_avg']) > 1 else 0.0
+                        if history is None or (isinstance(history, float) and np.isnan(history)):
+                            print(f"警告: 模式 {pattern_id} 的历史 'compute_load_avg' 在时间 {env.simulation_time - 1:.2f} 为 None。跳过此更新。")
+                            valid_inputs = False
+                        else:
+                            x_current.append(history)
+                    else:
+                        print(f"警告: 模式 {pattern_id} 的历史 'compute_load_avg' 在时间 {env.simulation_time - 1:.2f} 不可用或为空。跳过此更新。")
+                        valid_inputs = False
 
                 # 获取当前输出
                 y_current = None

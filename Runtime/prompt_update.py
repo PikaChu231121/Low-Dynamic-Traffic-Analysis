@@ -22,15 +22,14 @@ Do NOT include any explanation after <EXP>, and do NOT include any text outside 
 
 PAT_TPL = [
 """
-We are predicting the average compute load.
+We are predicting the average compute load of the next time slot.
 
 Inputs:
-- x1 = task success ratio
-- x2 = vehicle density
-- x3 = UAV density
-- x4 = Junction 0 vehicle count
-- x5 = Junction 1 vehicle count
-- x6 = Junction 2 vehicle count
+- x1 = current task success ratio
+- x2 = current vehicle density
+- x3 = current average V2U rate
+- x4 = current average compute load (i.e., y_t)
+- x5 = previous average compute load (i.e., y_(t-1))
 
 Current formula:
 y = {current_formula}
@@ -52,21 +51,24 @@ Expressions must satisfy the following restrictions:
     - Additionally, you may use the following compound functions:
         - movavg(x, k): moving average of variable x over the past k time steps (x can only be one variable instead of an expression)
     - Do not fit constants, but use c0, c1, etc.
-    - Only include accessible independent variables from data. This dataset has only one, x1.
+    - Only include accessible independent variables from data, which are x1, x2, x3, x4 and x5.
 
 Note: The target y shows complex and oscillating behavior.
 
 You may consider using:
-- Polynomial terms (square(x), cube(x))
-- Logarithmic and exponential structures
-- Variable differences: (x1 - x2)
-- Local trend smoothing: movavg(x3, 3)
+- Polynomial terms (e.g., x1², x2³)
+- Exponential and logarithmic transformations
+- Cross-variable interactions (e.g., x1 * x3, x2 / x5)
+- Temporal modeling elements:
+  - Moving average: movavg(x1, 3)
+  - Residual dynamics: x1 - x2
+  - State memory: x4, x5, (x4 - x5)
 
 YOUR RESPONSE:
 
 """, 
 """
-We are predicting the average V2U rate.
+We are predicting the average V2U rate of the next time slot.
 
 Inputs:
 - x1 = vehicle density
@@ -91,13 +93,13 @@ Expressions must satisfy the following restrictions:
     - Only acceptable binary operators are limited to these four: +, -, *, and /.
     - Only acceptable unary operators are limited to these five: square, cube, sqrt, log, and exp.
     - Do not fit constants, but use c0, c1, etc.
-    - Only include accessible independent variables from data. This dataset has only one, x1.
+    - Only include accessible independent variables from data, which are x1, x2 and x3.
 
 YOUR RESPONSE:
 
 """, 
 """
-We are predicting the task success ratio.
+We are predicting the task success ratio of the next time slot.
 
 Inputs:
 - x1 = average V2U rate
@@ -125,7 +127,7 @@ Expressions must satisfy the following restrictions:
         - min(x, y, ...): minimum of x, y, ...
         - max(x, y, ...): maximum of x, y, ...
     - Do not fit constants, but use c0, c1, etc.
-    - Only include accessible independent variables from data. This dataset has only one, x1.
+    - Only include accessible independent variables from data, which are x1, x2 and x3.
 
 Note: The target y is a success ratio and must be in the range [0, 1].
 
