@@ -106,6 +106,7 @@ print("\nSimulation done.")
 
 data_collector.predict_and_compare_metrics(
     formula_json_paths=formula_json_paths,
-    output_json_path=output_json_path
+    output_json_path=output_json_path,
+    output_image_path=output_image_path,
 )
 print(f"所有实验的NMAE结果已保存到: {output_json_path}")

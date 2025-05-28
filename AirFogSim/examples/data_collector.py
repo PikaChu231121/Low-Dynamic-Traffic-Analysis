@@ -450,12 +450,11 @@ class DataCollector:
             # 调整布局，留出顶部空间以显示标题
             plt.tight_layout(rect=[0, 0, 1, 0.93])
             plt.suptitle(f'Run {run_idx+1} - Prediction vs Actual', y=1.00)
+            if output_image_path:
+                plt.savefig(os.path.join(output_image_path, f'run{run_idx+1}_prediction.png'), dpi=300, bbox_inches='tight')
             plt.show()
             plt.pause(10)
             all_runs_results.append(run_result)
-
-            if output_image_path:
-                plt.savefig(os.path.join(output_image_path, f'run{run_idx+1}_prediction.png'), dpi=300, bbox_inches='tight')
 
         if output_json_path:
             with open(output_json_path, 'w') as f:

@@ -64,7 +64,7 @@ formula_json_paths = [
     os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run2.json'),
     os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run3.json')
 ]
-output_json_path = os.path.join(os.path.dirname(__file__), '../output/prediction/all_runs_mae.json')
+output_json_path = os.path.join(os.path.dirname(__file__), '../output/prediction/all_runs_nmae.json')
 output_image_path = os.path.join(os.path.dirname(__file__), '../output/prediction')
 os.makedirs(os.path.dirname(output_json_path), exist_ok=True)
 
@@ -106,6 +106,7 @@ print("\nSimulation done.")
 
 data_collector.predict_and_compare_metrics(
     formula_json_paths=formula_json_paths,
-    output_json_path=output_json_path
+    output_json_path=output_json_path,
+    output_image_path=output_image_path
 )
 print(f"所有实验的NMAE结果已保存到: {output_json_path}")
