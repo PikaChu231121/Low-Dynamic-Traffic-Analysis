@@ -1,7 +1,7 @@
 from collections import deque
 import numpy as np
 
-from helper import format_expressions, format_and_parse_expressions, custom_sorting, movavg  # type: ignore
+from helper import calculate_normalized_mae, calculate_complexity, format_expressions, format_and_parse_expressions, custom_sorting, movavg  # type: ignore
 
 class AirFogRuntimeUpdater:
     def __init__(self, pattern_id: int, exprs: list, fitted_params: list, optimizer, llm_chain,
@@ -132,17 +132,26 @@ class AirFogRuntimeUpdater:
 
         print("Fitting constants for new expressions...")
         new_results = self.optimizer.fitting_constants(X, y, new_exprs)
-        sorted_results = custom_sorting(new_results)[-self.n_cached_expressions:]
 
-        self.top_equations = [{
-            "equation": r["equation"],
-            "fitted_params": r["fitted_params"],
-            "last_mae": r["nmae"],  # 使用拟合NMAE作为初始MAE
-        } for r in sorted_results]
+        old_results = [
+            {
+                'equation': eq['equation'],
+                'fitted_params': eq['fitted_params'],
+                'nmae': calculate_normalized_mae(eq['equation'], np.column_stack([var.reshape(-1, 1) for var in X] + [y.reshape(-1, 1)]), eq['fitted_params']),
+                'complexity': calculate_complexity(eq['equation'])
+            }
+            for eq in self.top_equations
+        ]
 
-        print(f"Updated expressions:")
-        for r in sorted_results:
-            print(f"{r['equation']} (NMAE={r['nmae']:.4f})")
-
-        # 重新选择最优表达式
-        self.best_expression_index = 0
+        # 合并所有候选并重新排序
+        merged = new_results + old_results
+        merged.sort(key=lambda r: (r['nmae'], r['complexity']))
+        self.top_equations = [
+            {
+                'equation': r['equation'],
+                'fitted_params': r['fitted_params'],
+                'current_pred': None,
+                'current_mae': None
+            }
+            for r in merged[:self.n_cached_expressions]
+        ]

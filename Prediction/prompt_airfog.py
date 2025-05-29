@@ -4,7 +4,7 @@ You are an Intelligent Symbolic Regressor that predicts non-linear equations fro
 Please provide your response in two parts. First, your analysis of the dataset should be written on a scratch pad. 
 Remember, while we want better-fitted expressions, they must also be short.
 
-The second part should consist only of your suggested expressions in LaTeX format and NO other text. 
+The second part should consist only of your suggested expressions and NO other text. 
 Suppose there're 2 patterns, where expressions of the first pattern are y11 and y12, and expressions of the second pattern are y21 and y22, the output is a 2-dimensional list like this: [["y11", "y12"], ["y21", "y22"]]
 
 Separate the two parts with this exact string: “<EXP>”. 
@@ -33,7 +33,7 @@ Expressions must satisfy the following restrictions:
         - min(x, y, ...): minimum of x, y, ...
         - max(x, y, ...): maximum of x, y, ...
         - movavg(x, k): moving average of variable x over the past k time steps (x can only be one variable instead of an expression)
-    - Do not fit constants, but use c0, c1, etc.
+    - Do not fit constants, but use c0, c1, etc. Note that indexes of constants start from 0 for every expressions.
     - Only include accessible independent variables from data.
 
 YOUR RESPONSE:

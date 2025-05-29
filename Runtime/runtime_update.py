@@ -84,7 +84,7 @@ def init_runtime_updaters(model_path=None, data_path=None):
                 llm_chain=build_runtime_llm_chain(i),
                 indep_vars=indep_vars_train[i] if i < len(indep_vars_train) else [],
                 dep_vars=dep_vars_train[i] if i < len(dep_vars_train) else [],
-                error_threshold=0.15,
+                error_threshold=0.2,
                 n_cached_expressions=len(model_data[pat_key]),
             )
             updaters.append(updater)

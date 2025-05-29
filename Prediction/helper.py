@@ -110,13 +110,13 @@ def format_and_parse_expressions(expression_string: str):
 
     parsed_expressions = []
 
-    # Case 1: Try JSON-style list parsing first (if expressions are quoted)
+    # Case 1: Try Python-style list parsing first (if expressions are quoted)
     try:
-        json_compatible = "[" + expression_string + "]"
-        expressions = json.loads(json_compatible)
+        safe_expr_string = re.sub(r'\\', r'\\\\', expression_string)
+        expressions = ast.literal_eval(safe_expr_string)
         lines = [str(e).strip() for e in expressions]
     except:
-        # Case 2: If not JSON, try line-by-line parsing
+        # Case 2: If not Python expression, try line-by-line parsing
         if '\n' in expression_string:
             lines = [line.strip() for line in expression_string.split('\n') if line.strip()]
         else:
@@ -133,9 +133,11 @@ def format_and_parse_expressions(expression_string: str):
         line = re.sub(r'c_\{(\d+)\}', r'c[\1]', line)
         line = re.sub(r'c_(\d+)', r'c[\1]', line)
 
-        # Clean up input variable notation: x_1 → x1
+        # Clean up input variable notation: x_1 → x1, x_{1} → x1
         line = re.sub(r'([a-zA-Z])_(\d+)', r'\1\2', line)
         line = re.sub(r'x\d+_\((\d+)\)', r'x\1', line)
+        line = re.sub(r'x_\{(\d+)\}', r'x\1', line)
+        line = re.sub(r'x_(\d+)', r'x\1', line)
 
         if line:
             parsed_expressions.append(line)
@@ -157,11 +159,16 @@ def format_expressions(expressions):
         formula = formula.replace(r"\(", "(").replace(r"\)", ")")
         formula = formula.replace(r"\\(", "(").replace(r"\\)", ")")
         formula = formula.replace(r"\*", "*").replace(r"\\*", "*")
+        formula = formula.replace(r'\,', '')
         formula = re.sub(r"\\sqrt\{([^}]+)\}", r"(\1)**0.5", formula)  # Replace \sqrt{content} with content**0.5
         formula = re.sub(r"\\cbrt\{([^}]+)\}", r"(\1)**(1/3)", formula)  # Replace \cbrt{content} with content**(1/3)
         formula = formula.replace(r"cube\_root", "**(1/3)")
         formula = formula.replace(r"\log", "log").replace(r"\exp", "exp").replace(r"\min", "min").replace(r"\max", "max")
         formula = formula.replace(r"\\log", "log").replace(r"\\exp", "exp").replace(r"\\min", "min").replace(r"\\max", "max")
+        formula = re.sub(r'\\Bigl\s*\(', '(', formula)
+        formula = re.sub(r'\\Bigr\s*\)', ')', formula)
+        formula = re.sub(r'\\bigl\s*\(', '(', formula)
+        formula = re.sub(r'\\bigr\s*\)', ')', formula)
         formula = formula.replace(r"log10", "log")
         formula = re.sub(r'cube_root\(([^)]+)\)', r'\1**(1/3)', formula)
         formula = re.sub(r'cubert\(([^)]+)\)', r'\1**(1/3)', formula)
@@ -170,22 +177,27 @@ def format_expressions(expressions):
         formula = formula.replace("log10*", "log")
         formula = formula.replace("e**", "exp")
         formula = formula.replace("\\cdot", "*")
+        formula = re.sub(r'\\mathrm\{([^}]+)\}', r'\1', formula)
         formula = re.sub(r"c(\d+)", r"c[\1]", formula)  # Replace c0, c1, etc. with c[0], c[1], etc.
         formula = re.sub(r"\{([^}]+)\}", r"(\1)", formula)  # Replace { } with ( )
         formula = formula.replace("^", "**")  # Replace ^ with **
-        formula = formula.replace(" ", "")  # Remove white space
         formula = re.sub(r"(?<![a-zA-Z])x(?![a-zA-Z0-9])", "x1", formula)  # Replace x with x1 if it's not followed by a digit
         formula = re.sub(r"(?<![a-zA-Z])y(?![a-zA-Z0-9])", "x2", formula)  # Replace y with x2 if it's not followed by a digit
         formula = re.sub(r"(?<![a-zA-Z])z(?![a-zA-Z0-9])", "x3", formula)  # Replace z with x3 if it's not followed by a digit
+        formula = formula.replace(" ", "")  # Remove white space
         formula = formula.replace("$", "")  # Replace $ signs if present
+        formula = formula.replace('\\tfrac', '').replace(')(', ')/(') if 'tfrac' in formula else formula
         formula = formula.replace('\\frac', '').replace(')(', ')/(') if 'frac' in formula else formula
         formula = formula.replace('frac', '').replace(')(', ')/(') if 'frac' in formula else formula
         formula = formula.replace(')(', ')*(')
+        formula = re.sub(r'x\d+_\{(\d+)\}', r'x\1', formula)
 
         # Fix missing multiplication signs between constants, variables, and parentheses
         formula = re.sub(r"(\d)([a-zA-Z\(])", r"\1*\2", formula)  # Add * between number and variable/parenthesis
         formula = re.sub(r"(\))([a-zA-Z\(])", r"\1*\2", formula)  # Add * between closing parenthesis and variable/parenthesis
         formula = re.sub(r"(c\[\d+\])([a-zA-Z\(])", r"\1*\2", formula)  # Add * between c[i] and opening parenthesis
+        formula = re.sub(r'(x\d)([a-zA-Z])', r'\1*\2', formula) # Add * between variable and another variable
+        formula = re.sub(r'([a-zA-Z])(x\d)', r'\1*\2', formula) # Add * between variable and variable
         
         # Rewrite movavg expressions
         formula = formula.replace(r"\movavg", "movavg").replace(r"\\movavg", "movavg")

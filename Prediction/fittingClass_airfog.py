@@ -62,13 +62,35 @@ class FittingOptimizerAirFog:
             equation_indices = self.get_equation_indices(equation)
             num_constants = len(equation_indices)
 
-            # Infer bounds for each constant based on expression content
+            # Get all used constant indices, e.g., [0, 1, 2]
+            equation_indices = self.get_equation_indices(equation)
+            num_constants = len(equation_indices)
+            
+            if num_constants == 0:
+                nmae = self.equation_error([], equation, data)
+                complexity = calculate_complexity(equation)
+                results.append({
+                    'equation': equation,
+                    'complexity': complexity,
+                    'nmae': nmae,
+                    'fitted_params': []  # 没有参数
+                })
+                continue
+
+            # Improved bound logic: infer per constant index
             bounds = []
-            for i in range(num_constants):
-                if any(op in equation for op in ['exp(', 'log(', 'sqrt(', '/']):
+            for idx in equation_indices:
+                # 查找每个 c[idx] 周围是否有敏感操作
+                local_expr = re.findall(rf"(exp|log|sqrt)\s*\([^\)]*c\[{idx}\][^\)]*\)", equation)
+                if local_expr:
                     bounds.append((-5.0, 5.0))
                 else:
                     bounds.append((-10.0, 10.0))
+
+            # Fallback for safety
+            if len(bounds) != num_constants or any(len(b) != 2 for b in bounds):
+                print(f"[Warning] Invalid bounds for equation: {equation}, fallback to default")
+                bounds = [(-10.0, 10.0)] * num_constants
 
             # Check validity
             initial_val = [1.0] * num_constants

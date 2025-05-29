@@ -12,7 +12,7 @@ Avoid unnecessary drastic rewrites. The new expressions must be short, symbolic,
 
 Please provide your response in two parts:
 1. First, write your analysis of the dataset and your reasoning process on a scratch pad.
-2. Second, provide only your suggested expressions in LaTeX format and NO other text. Suppose if expressions are y1 and y2, the output is a list like this: ["y1", "y2"]
+2. Second, provide only your suggested expressions and NO other text. Suppose if expressions are y1 and y2, the output is a list like this: ["y1", "y2"]
 
 Separate the two parts using the exact string: <EXP>
 Do NOT include any explanation after <EXP>, and do NOT include any text outside the expression list.
@@ -55,7 +55,7 @@ Expressions must satisfy the following restrictions:
 
 Note: The target y shows complex and oscillating behavior.
 
-You may consider using:
+You may consider using the follwing, but always AVOID UNNECESSARY DRASTIC REWRITES:
 - Polynomial terms (e.g., x1², x2³)
 - Exponential and logarithmic transformations
 - Cross-variable interactions (e.g., x1 * x3, x2 / x5)
@@ -129,11 +129,20 @@ Expressions must satisfy the following restrictions:
     - Do not fit constants, but use c0, c1, etc.
     - Only include accessible independent variables from data, which are x1, x2 and x3.
 
-Note: The target y is a success ratio and must be in the range [0, 1].
+Note: The target y is a success ratio and must be in the range [0, 1]. Empirical observations show:
+- When bandwidth is insufficient, task success sharply declines.
+- When compute load nears saturation, task success drops abruptly.
+- The y-value (success ratio) non-linearly changes with respect to x1–x3.
 
-You are encouraged to use structures that naturally output bounded values, such as:
-- Sigmoid: y = 1 / (1 + exp(-(…)))
-- Bounded min/max: y = min(1, max(0, …))
+You may consider using the follwing, but always AVOID UNNECESSARY DRASTIC REWRITES:
+- Sigmoid-like structures to model saturating effects:  
+  `y = 1 / (1 + exp(-...))`  
+  `y = min(1, max(0, ...))`
+- Load penalty: include inverse terms like `1 / (x3 + c)` or log-shifted forms like `log(x3 + 1)`
+- Bandwidth interplay: try cross-variable interactions such as `x1 * x2` or `x1 / (x2 + 1)`
+- Saturation indicators: consider residuals or thresholding functions for compute load
+- Simpler alternatives: linear combinations, squares or square roots of x1/x2 if it captures the trend
+- Avoid always returning expressions that collapse to ~0.5.
 
 Your task is to revise the current formula to reduce error while ensuring y ∈ [0, 1].
 
