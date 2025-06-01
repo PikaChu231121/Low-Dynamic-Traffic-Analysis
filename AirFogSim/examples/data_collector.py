@@ -1,5 +1,6 @@
 import os
 import sys
+from io import BytesIO
 
 import numpy as np
 import pandas as pd
@@ -627,7 +628,8 @@ class DataCollector:
                 ax.autoscale_view()
                 ax.legend()
 
-        # 刷新画布
-        self._live_plot_state['fig'].canvas.draw_idle()
-        self._live_plot_state['fig'].canvas.flush_events()
-        plt.pause(0.01)
+        buf = BytesIO()
+        self._live_plot_state['fig'].set_size_inches(24, 9)
+        self._live_plot_state['fig'].savefig(buf, format="png")
+        buf.seek(0)
+        return buf

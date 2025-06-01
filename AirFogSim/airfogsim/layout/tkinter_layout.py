@@ -78,7 +78,24 @@ class TkinterLayout(tk.Tk, BaseLayout):
         self.canvas_dots = {}  # env.missionId -> canvas oval
         self.canvas_time_image = None
 
+    def get_canvas_image(self):
+        from io import BytesIO
+        from PIL import Image
 
+        # 获取 postscript 字符串（注意：不是写入 file，而是返回 string）
+        ps_data = self.canvas.postscript(colormode='color')
+
+        # 将字符串写入 BytesIO，再用 PIL 读取
+        ps_buf = BytesIO(ps_data.encode('utf-8'))
+
+        # 使用 PIL 打开 postscript 并转为 PNG
+        image = Image.open(ps_buf)
+
+        # 转为 PNG BytesIO
+        img_buf = BytesIO()
+        image.save(img_buf, format='PNG')
+        img_buf.seek(0)
+        return img_buf
 
     def create_map_grid_window(self):
         self.isShowMapGrid = not self.isShowMapGrid

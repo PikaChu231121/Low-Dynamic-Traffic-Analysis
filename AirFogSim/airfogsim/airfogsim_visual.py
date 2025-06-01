@@ -19,7 +19,10 @@ class AirFogSimEnvVisualizer():
         if self._mode == 'graphic':
             self._layout = TkinterLayout(config, self._env)
         elif self._mode == 'text':
-            self._layout = CursesLayout(config, self._env)  
+            self._layout = CursesLayout(config, self._env)
+
+    def get_canvas_image(self):
+        return self._layout.get_canvas_image()
 
     def render(self, env):
         """Render the environment.

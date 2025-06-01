@@ -145,6 +145,11 @@ class AirFogSimEnv():
         """
         self._visualizer = AirFogSimEnvVisualizer(mode=mode, config=self.config, env=self)
 
+    def get_gui_image(self):
+        if self._visualizer and hasattr(self._visualizer._layout, 'get_canvas_image'):
+            return self._visualizer._layout.get_canvas_image()
+        return None
+
     def render(self):
         """Render the environment if the visualizer is mounted.
         """
