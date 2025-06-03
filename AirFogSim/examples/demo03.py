@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 dir_name = os.path.dirname(__file__)
 
@@ -102,7 +103,7 @@ def update_formula_visualization(formulas_history):
         # === 3. 公式历史记录文本展示 ===
         ax_text.axis("off")
         y = 1.0
-        recent_history = history[-6:]  # 可改为更多
+        recent_history = history[-4:]  # 可改为更多
 
         for entry in reversed(recent_history):
             t = entry["time"]
@@ -149,6 +150,8 @@ try:
 except ImportError as e:
     print(f"警告: Runtime模块无法导入，运行时更新将被禁用 ({e})")
     runtime_available = False
+
+from rule_summary import summarize_rules_for_pattern  # type: ignore
 
 def load_config(path):
     with open(path, 'r') as file:
@@ -377,6 +380,26 @@ while not env.isDone():
 
 # 关闭环境
 env.close()
+
+# 总结指标变化规则
+for updater in updaters:
+    if updater.pattern_id == 0:
+        indep_names = [
+            "task success ratio", "vehicle density", "V2U density",
+            "current compute load", "previous compute load"
+        ]
+        dep_name = "next-slot average compute load"
+    elif updater.pattern_id == 1:
+        indep_names = ["vehicle density", "UAV density", "compute load"]
+        dep_name = "next-slot V2U rate"
+    elif updater.pattern_id == 2:
+        indep_names = ["V2U rate", "V2I rate", "compute load"]
+        dep_name = "next-slot task success ratio"
+    else:
+        continue  # Skip unused patterns
+
+    summarize_rules_for_pattern(updater, indep_names, dep_name)
+
 
 # 保存最终的表达式
 final_formulas = []

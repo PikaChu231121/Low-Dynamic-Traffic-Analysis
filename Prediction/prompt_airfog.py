@@ -62,7 +62,7 @@ Expressions must satisfy the following restrictions:
         - min(x, y, ...): minimum of x, y, ...
         - max(x, y, ...): maximum of x, y, ...
         - movavg(x, k): moving average of variable x over the past k time steps (x can only be one variable instead of an expression)
-    - Do not fit constants, but use c0, c1, etc.
+    - Do not fit constants, but use c0, c1, etc. Note that indexes of constants start from 0 for every expressions.
     - Only include accessible independent variables from data.
     - Do not suggest SR-similar expressions to avoid redundant expressions.
 

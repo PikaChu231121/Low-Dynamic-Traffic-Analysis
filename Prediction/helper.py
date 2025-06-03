@@ -43,12 +43,17 @@ def calculate_normalized_mae(equation, data, fitted_params):
     num_indep_vars = data.shape[1] - 1
     x = data[:, :num_indep_vars]
     y = data[:, num_indep_vars]
-    predicted_y = eval(equation, {'c': fitted_params, 'np': np,'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x[:j+1, i-1].reshape(-1), k) for j in range(len(x))]), **{f'x{i+1}':x[:,i].reshape(-1) for i in range(num_indep_vars)}})
 
-    if np.isscalar(predicted_y):
-        predicted_y = np.full(y.shape, predicted_y)
-    mae = mean_absolute_error(y, predicted_y)
-    normalized_mae = mae / (y.max() - y.min())
+    try:
+        predicted_y = eval(equation, {'c': fitted_params, 'np': np,'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp, 'min': np.minimum, 'max': np.maximum, 'movavg': lambda i, k: np.array([movavg(x[:j+1, i-1].reshape(-1), k) for j in range(len(x))]), **{f'x{i+1}':x[:,i].reshape(-1) for i in range(num_indep_vars)}})
+        if np.isscalar(predicted_y):
+            predicted_y = np.full(y.shape, predicted_y)
+        mae = mean_absolute_error(y, predicted_y)
+        normalized_mae = mae / (y.max() - y.min())
+    except Exception as e:
+        print(f"Error evaluating equation: {equation}. Error: {e}")
+        normalized_mae = float('nan')
+
     return round(normalized_mae, 8)
 
 def calculate_complexity(equation):
@@ -127,7 +132,7 @@ def format_and_parse_expressions(expression_string: str):
         # Remove leading numbers (like '1.', '2.') and parentheses
         line = re.sub(r'^\d+\.\s*', '', line).strip()
         line = re.sub(r'^\\\(|\\\)$', '', line).strip()
-        line = line.strip('"').strip("'").rstrip(',')
+        line = line.rstrip(',').strip('"').strip("'")
 
         # Convert symbolic constants to Pythonic notation: c_0 → c[0], c_{1} → c[1]
         line = re.sub(r'c_\{(\d+)\}', r'c[\1]', line)

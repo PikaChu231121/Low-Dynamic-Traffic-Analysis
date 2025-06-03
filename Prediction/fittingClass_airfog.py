@@ -95,12 +95,6 @@ class FittingOptimizerAirFog:
             # Check validity
             initial_val = [1.0] * num_constants
             if not self.is_valid_equation(equation, data, initial_val):
-                results.append({
-                    'equation': equation,
-                    'complexity': float('inf'),
-                    'nmae': float('inf'),
-                    'fitted_params': []
-                })
                 continue
 
             # Perform optimization

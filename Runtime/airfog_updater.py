@@ -22,6 +22,7 @@ class AirFogRuntimeUpdater:
         # 历史运行记录
         self.history_X = []
         self.history_y = []
+        self.rule_trace_log = []
 
         # 滑动窗口
         self.recent_y_true = deque(maxlen=window_size)
@@ -110,11 +111,10 @@ class AirFogRuntimeUpdater:
         self.recent_y_true.append(y_true)
         self.recent_y_pred.append(y_pred)
 
-        current_mae = abs(y_pred - y_true)
-        self.top_equations[self.best_expression_index]["mae_history"].append(current_mae)
+        current_error = abs(y_pred - y_true)
+        self.top_equations[self.best_expression_index]["mae_history"].append(current_error)
 
-        print(f"[Pattern {self.pattern_id}] Pred={y_pred:.4f}, True={y_true:.4f}, MAE={current_mae:.4f}")
-        self.select_best_expression()
+        print(f"[Pattern {self.pattern_id}] Pred={y_pred:.4f}, True={y_true:.4f}, Error={current_error:.4f}")
 
         # 触发更新判断
         if len(self.recent_y_true) == self.window_size:
@@ -125,6 +125,17 @@ class AirFogRuntimeUpdater:
             if nmae > self.error_threshold:
                 print(f"[Pattern {self.pattern_id}] Triggering update (NMAE={nmae:.4f})")
                 self.retrain_expression()
+        
+        self.select_best_expression()
+
+        self.rule_trace_log.append({
+            "x_input": x_input,
+            "y_true": y_true,
+            "y_pred": y_pred,
+            "equation": self.top_equations[self.best_expression_index]["equation"],
+            "mae": current_error,
+            "nmae": nmae if len(self.recent_y_true) == self.window_size else None,
+        })
 
     def select_best_expression(self):
         """ 基于平均 MAE 选出最优表达式 """
@@ -139,7 +150,7 @@ class AirFogRuntimeUpdater:
         self.best_expression_index = best_idx
 
     def retrain_expression(self):
-        """ 使用历史数据 + LLM 更新表达式池 """
+        """ 使用历史数据 + LLM 更新表达式池，采用保守替换机制 """
         X_matrix = np.array(list(zip(*self.indep_vars)) + self.history_X)
         X = [X_matrix[:, i] for i in range(X_matrix.shape[1])]
         y = np.array(list(self.dep_vars) + self.history_y)
@@ -170,12 +181,12 @@ class AirFogRuntimeUpdater:
             return
 
         print("LLM thoughts:")
-        print(parts[0].strip())
+        print(parts[0].strip(), end='\n\n')
 
         print("Fitting new expressions...")
         new_results = self.optimizer.fitting_constants(X, y, new_exprs)
 
-        # 当前表达式池旧结果重新评估
+        # 保留当前表达式池及其滑动误差历史
         old_results = []
         for eq in self.top_equations:
             nmae = calculate_normalized_mae(eq["equation"], np.column_stack([*X, y]), eq["fitted_params"])
@@ -184,15 +195,36 @@ class AirFogRuntimeUpdater:
                 "equation": eq["equation"],
                 "fitted_params": eq["fitted_params"],
                 "nmae": nmae,
-                "complexity": complexity
+                "complexity": complexity,
+                "mae_history": eq["mae_history"]
             })
 
-        merged = custom_sorting(new_results + old_results)[:self.n_cached_expressions]
+        # 合并并排序
+        combined = custom_sorting(new_results + old_results)
+        
+        # 保留当前最优表达式
+        best_eq = self.top_equations[self.best_expression_index]
+        preserved_eqs = [{
+            "equation": best_eq["equation"],
+            "fitted_params": best_eq["fitted_params"],
+            "mae_history": best_eq["mae_history"],
+            "nmae": np.mean(best_eq["mae_history"]) if best_eq["mae_history"] else float('inf')
+        }]
 
-        self.top_equations = [{
-            "equation": r["equation"],
-            "fitted_params": r["fitted_params"],
-            "mae_history": deque(maxlen=self.window_size),
-            "nmae": float('inf')
-        } for r in merged]
+        # 填充其余 top-K（排除重复）
+        added = set([best_eq["equation"]])
+        for r in combined:
+            if r["equation"] in added:
+                continue
+            preserved_eqs.append({
+                "equation": r["equation"],
+                "fitted_params": r["fitted_params"],
+                "mae_history": deque(maxlen=self.window_size),
+                "nmae": r.get("nmae", float('inf'))
+            })
+            added.add(r["equation"])
+            if len(preserved_eqs) >= self.n_cached_expressions:
+                break
+
+        self.top_equations = preserved_eqs
         self.initialize_mae_history()

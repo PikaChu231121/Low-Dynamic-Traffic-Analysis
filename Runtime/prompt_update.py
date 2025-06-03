@@ -51,7 +51,7 @@ Expressions must satisfy the following restrictions:
     - Only acceptable unary operators are limited to these five: square, cube, sqrt, log, and exp.
     - Additionally, you may use the following compound functions:
         - movavg(x, k): moving average of variable x over the past k time steps (x can only be one variable instead of an expression)
-    - Do not fit constants, but use c0, c1, etc.
+    - Do not fit constants, but use c0, c1, etc. Note that indexes of constants start from 0 for every expressions.
     - Only include accessible independent variables from data, which are x1, x2, x3, x4 and x5.
 
 Note: The target y shows complex and oscillating behavior.
@@ -94,7 +94,7 @@ Your task is to generate {Neq} expressions to improve the current formula to bet
 Expressions must satisfy the following restrictions:
     - Only acceptable binary operators are limited to these four: +, -, *, and /.
     - Only acceptable unary operators are limited to these five: square, cube, sqrt, log, and exp.
-    - Do not fit constants, but use c0, c1, etc.
+    - Do not fit constants, but use c0, c1, etc. Note that indexes of constants start from 0 for every expressions.
     - Only include accessible independent variables from data, which are x1, x2 and x3.
 
 YOUR RESPONSE:
@@ -129,7 +129,7 @@ Expressions must satisfy the following restrictions:
     - Additionally, you may use the following compound functions:
         - min(x, y, ...): minimum of x, y, ...
         - max(x, y, ...): maximum of x, y, ...
-    - Do not fit constants, but use c0, c1, etc.
+    - Do not fit constants, but use c0, c1, etc. Note that indexes of constants start from 0 for every expressions.
     - Only include accessible independent variables from data, which are x1, x2 and x3.
 
 Note: The target y is a success ratio and must be in the range [0, 1]. Empirical observations show:
