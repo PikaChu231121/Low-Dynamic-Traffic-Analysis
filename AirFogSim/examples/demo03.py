@@ -382,24 +382,25 @@ while not env.isDone():
 env.close()
 
 # 总结指标变化规则
-for updater in updaters:
-    if updater.pattern_id == 0:
-        indep_names = [
-            "task success ratio", "vehicle density", "V2U density",
-            "current compute load", "previous compute load"
-        ]
-        dep_name = "next-slot average compute load"
-    elif updater.pattern_id == 1:
-        indep_names = ["vehicle density", "UAV density", "compute load"]
-        dep_name = "next-slot V2U rate"
-    elif updater.pattern_id == 2:
-        indep_names = ["V2U rate", "V2I rate", "compute load"]
-        dep_name = "next-slot task success ratio"
-    else:
-        continue  # Skip unused patterns
-
-    summarize_rules_for_pattern(updater, indep_names, dep_name)
-
+try:
+    for updater in updaters:
+        if updater.pattern_id == 0:
+            indep_names = [
+                "current task success ratio", "current vehicle density", "current average V2U density",
+                "current average compute load", "previous-slot average compute load"
+            ]
+            dep_name = "next-slot average compute load"
+        elif updater.pattern_id == 1:
+            indep_names = ["current vehicle density", "current UAV density", "current average compute load"]
+            dep_name = "next-slot average V2U rate"
+        elif updater.pattern_id == 2:
+            indep_names = ["current average V2U rate", "current average V2I rate", "current average compute load"]
+            dep_name = "next-slot task success ratio"
+        else:
+            continue  # Skip unused patterns
+        summarize_rules_for_pattern(updater, indep_names, dep_name)
+except Exception as e:
+    print(f"规则总结失败：{e}")
 
 # 保存最终的表达式
 final_formulas = []
