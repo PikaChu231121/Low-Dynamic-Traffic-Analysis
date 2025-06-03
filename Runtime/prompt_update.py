@@ -6,7 +6,7 @@ Key indicators—such as task success ratio, V2U rate, and UAV density—are rec
 Each predictive pattern captures the relationship between current-slot inputs and next-slot outputs.
 
 You are now asked to revise and improve an existing symbolic expression using recent prediction feedback. 
-You will be shown the current expression, the predicted value, the actual value, and their absolute error. 
+You will be shown the current expression, the predicted value, the actual value, and their mean absolute error. 
 When possible, try to improve the expression by modifying or extending the current structure. 
 Avoid unnecessary drastic rewrites. The new expressions must be short, symbolic, and better fitted.
 
@@ -37,7 +37,7 @@ y = {current_formula}
 At time t:
 - Predicted: {predicted}
 - Actual: {actual}
-- MAE: {mae}
+- MAE of last {window_size} predictions: {mae}
 
 Recent samples:
 - Dependent variable: {dep}
@@ -81,7 +81,7 @@ y = {current_formula}
 At time t:
 - Predicted: {predicted}
 - Actual: {actual}
-- MAE: {mae}
+- MAE of last {window_size} predictions: {mae}
 
 Recent samples:
 - Independent variables: {indep}
@@ -112,7 +112,7 @@ y = {current_formula}
 At time t:
 - Predicted: {predicted}
 - Actual: {actual}
-- MAE: {mae}
+- MAE of last {window_size} predictions: {mae}
 
 Recent samples:
 - Independent variables: {indep}
