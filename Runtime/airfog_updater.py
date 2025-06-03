@@ -32,6 +32,7 @@ class AirFogRuntimeUpdater:
             "equation": exprs[i],
             "fitted_params": fitted_params[i],
             "mae_history": deque(maxlen=window_size),
+            "nmae": float('inf')
         } for i in range(min(n_cached_expressions, len(exprs)))]
         self.initialize_mae_history()
 
@@ -41,20 +42,23 @@ class AirFogRuntimeUpdater:
         
     def initialize_mae_history(self):
         """基于训练数据的最后 window_size 个样本，为表达式池初始化滑动 MAE 历史"""
-        X_matrix = np.array(list(zip(*self.indep_vars)))
-        y_true = self.dep_vars
+        X_train_matrix = list(zip(*self.indep_vars))
+        X_matrix = np.array(X_train_matrix + self.history_X)
+        y_true = np.array(self.dep_vars.tolist() + self.history_y)
         window_k = min(len(y_true), self.window_size)
 
         for eq in self.top_equations:
             y_pred = []
             for i in range(len(y_true)):
+                global_vars = {
+                    'np': np, 'sqrt': np.sqrt, 'cbrt': np.cbrt, 'log': np.log, 'exp': np.exp,
+                    'min': np.minimum, 'max': np.maximum,
+                    'movavg': lambda i, k: movavg([x[i-1] for x in (self.history_X if self.history_X else X_train_matrix)], k)
+                }
                 local_vars = {f'x{j+1}': X_matrix[i, j] for j in range(X_matrix.shape[1])}
                 local_vars['c'] = eq['fitted_params']
                 try:
-                    pred = eval(eq['equation'], {
-                        'np': np, 'log': np.log, 'exp': np.exp, 'sqrt': np.sqrt,
-                        'min': np.minimum, 'max': np.maximum
-                    }, local_vars)
+                    pred = eval(eq['equation'], global_vars, local_vars)
                     y_pred.append(pred)
                 except:
                     y_pred.append(np.nan)
@@ -62,6 +66,12 @@ class AirFogRuntimeUpdater:
             # 保留最后 window_k 个残差
             residuals = [abs(p - t) for p, t in zip(y_pred[-window_k:], y_true[-window_k:]) if np.isfinite(p)]
             eq["mae_history"].extend(residuals)
+            
+            # 计算滑动窗口 NMAE
+            if len(residuals) > 0:
+                y_range = np.max(y_true[-window_k:]) - np.min(y_true[-window_k:])
+                nmae = np.mean(residuals) / (y_range + 1e-8)
+                eq["nmae"] = nmae
 
     def record_prediction(self, x_input: list) -> float:
         """ 使用当前最优表达式进行预测 """
@@ -142,6 +152,7 @@ class AirFogRuntimeUpdater:
             actual=self.history_y[-1],
             window_size=self.window_size,
             mae=np.mean(current_eq["mae_history"]),
+            y_range=(float(np.min(y)), float(np.max(y))),
             dep=y,
             indep=X,
             Neq=5
@@ -181,6 +192,7 @@ class AirFogRuntimeUpdater:
         self.top_equations = [{
             "equation": r["equation"],
             "fitted_params": r["fitted_params"],
-            "mae_history": deque(maxlen=self.window_size)
+            "mae_history": deque(maxlen=self.window_size),
+            "nmae": float('inf')
         } for r in merged]
         self.initialize_mae_history()

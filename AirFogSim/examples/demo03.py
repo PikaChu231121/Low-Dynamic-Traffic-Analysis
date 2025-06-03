@@ -55,7 +55,7 @@ def update_formula_visualization(formulas_history):
             continue
 
         ax_bar = axs[pattern_id][0]   # 第1列：柱状图
-        ax_line = axs[pattern_id][1]  # 第2列：MAE趋势曲线
+        ax_line = axs[pattern_id][1]  # 第2列：NMAE趋势曲线
         ax_text = axs[pattern_id][2]  # 第3列：公式历史记录
 
         ax_bar.clear()
@@ -67,14 +67,14 @@ def update_formula_visualization(formulas_history):
         time_point = latest["time"]
         best_idx = latest["best_idx"]
 
-        # === 1. 当前 Top3 的 MAE 条形图 ===
-        sorted_eqs = sorted(eqs, key=lambda x: x["mae"])
+        # === 1. 当前 Top3 的 NMAE 条形图 ===
+        sorted_eqs = sorted(eqs, key=lambda x: x["nmae"])
         top3_eqs = sorted_eqs[:3]
 
         bar_labels = [wrap_formula(eq["equation"], max_len=50) for eq in top3_eqs]
-        bar_maes = [eq["mae"] for eq in top3_eqs]
+        bar_nmaes = [eq["nmae"] for eq in top3_eqs]
 
-        ax_bar.barh(range(len(bar_labels)), bar_maes, color='skyblue')
+        ax_bar.barh(range(len(bar_labels)), bar_nmaes, color='skyblue')
         ax_bar.set_yticks(range(len(bar_labels)))
         ax_bar.set_yticklabels(
             bar_labels,
@@ -82,21 +82,21 @@ def update_formula_visualization(formulas_history):
             fontproperties=myfont,
             fontsize=12
         )
-        ax_bar.set_xlabel("MAE")
+        ax_bar.set_xlabel("NMAE")
         ax_bar.set_title(f"模式 {pattern_id}：Top3 公式", fontsize=16, fontproperties=myfont)
 
         for i, eq in enumerate(top3_eqs):
             if eq["equation"] == eqs[best_idx]["equation"]:
-                ax_bar.text(bar_maes[i], i, " ← 当前最佳", fontsize=14, va='center', color='red', fontproperties=myfont)
+                ax_bar.text(bar_nmaes[i], i, " ← 当前最佳", fontsize=14, va='center', color='red', fontproperties=myfont)
 
-        # === 2. 最优 MAE 随时间变化曲线图 ===
+        # === 2. 最优 NMAE 随时间变化曲线图 ===
         times = [entry["time"] for entry in history]
-        best_maes = [entry["equations"][entry["best_idx"]]["mae"] for entry in history]
+        best_nmaes = [entry["equations"][entry["best_idx"]]["nmae"] for entry in history]
 
-        ax_line.plot(times, best_maes, marker='o', color='orange')
-        ax_line.set_title(f"模式 {pattern_id}：最优公式 MAE 曲线", fontsize=16, fontproperties=myfont)
+        ax_line.plot(times, best_nmaes, marker='o', color='orange')
+        ax_line.set_title(f"模式 {pattern_id}：最优公式 NMAE 曲线", fontsize=16, fontproperties=myfont)
         ax_line.set_xlabel("时间", fontsize=12, fontproperties=myfont)
-        ax_line.set_ylabel("MAE")
+        ax_line.set_ylabel("NMAE")
         ax_line.grid(True)
 
         # === 3. 公式历史记录文本展示 ===
@@ -114,9 +114,9 @@ def update_formula_visualization(formulas_history):
 
             for i, eq in enumerate(eqs):
                 eq_str = replace_params(eq["equation"], eq["fitted_params"])
-                mae = eq["mae"]
+                nmae = eq["nmae"]
                 prefix = "【最佳】" if i == best else ""
-                line = f"{prefix}公式 {i+1}: {eq_str} | MAE: {mae:.5f}"
+                line = f"{prefix}公式 {i+1}: {eq_str} | NMAE: {nmae:.5f}"
                 ax_text.text(0.02, y, line,ha='left', fontsize=12, va='top', color='red' if i == best else 'black', fontproperties=myfont)
                 y -= 0.10  # 每条公式之间再间隔开一些
 
@@ -237,11 +237,12 @@ last_y = [None] * 3
 if updaters:
     for pattern_id, updater in enumerate(updaters):
         if updater:
+            y = np.array(list(updater.dep_vars) + updater.history_y)
             current_eqs = [{
                 "equation": eq["equation"],
                 "fitted_params": eq["fitted_params"],
                 "complexity": len(eq["equation"]),  # 用公式长度作为复杂度简单估计
-                "mae": np.mean(eq["mae_history"]) if len(eq["mae_history"]) > 0 else np.nan
+                "nmae": eq["nmae"] if np.isfinite(eq["nmae"]) else 0.0
             } for eq in updater.top_equations]
             formulas_history[pattern_id].append({
                 "time": 0.0,
@@ -335,7 +336,7 @@ while not env.isDone():
                         "equation": eq["equation"],
                         "fitted_params": eq["fitted_params"],
                         "complexity": len(eq["equation"]),  # 简单估计
-                        "mae": np.mean(eq["mae_history"]) if len(eq["mae_history"]) > 0 else np.nan
+                        "nmae": eq["nmae"] if np.isfinite(eq["nmae"]) else 0.0
                     } for eq in updaters[pattern_id].top_equations]
                     
                     formulas_history[pattern_id].append({
@@ -386,7 +387,7 @@ for pattern_id in range(3):
             pattern_formulas.append({
                 "equation": eq["equation"],
                 "complexity": len(eq["equation"]),  # 简单估计复杂度
-                "mae": np.mean(eq["mae_history"]) if len(eq["mae_history"]) > 0 else float('nan'),
+                "nmae": eq["nmae"] if np.isfinite(eq["nmae"]) else 0.0,
                 "fitted_params": eq["fitted_params"]
             })
         final_formulas.append(pattern_formulas)
