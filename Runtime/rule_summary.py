@@ -13,8 +13,6 @@ You are an expert in vehicular-UAV collaborative systems.
 You will be given data collected from a low-altitude vehicular network where vehicles and UAVs collaborate to complete computational tasks under limited bandwidth and computational resources.
 Key indicators—such as task success ratio, V2U rate, and UAV density—are recorded at each time slot. Predictive patterns describe the relationship between next-slot outcomes and current-slot indicators.
 
-Your task is to summarize high-level behavioral rules from symbolic regression logs of the pattern described below.
-
 **Pattern {pattern_id}:** Predict `{dep_name}` from inputs:
 {indep_list}
 
@@ -32,20 +30,26 @@ Now here are the logs:
 
 ---
 
-From this data, summarize the key rules, threshold effects, and modeling behavior.
+Your task is to summarize **behavioral rules** and **indicator-outcome relationships** observed in this pattern.
+
 Focus on:
 
-- Causal / threshold rules (e.g. "If x3 > 5 → y increases")
-- Temporal trends
-- When model performance worsens
-- How indicators affect output
+- High-level causal patterns (e.g. “If x3 remains high for several time steps, then y tends to increase.”)
+- Threshold-based triggers (e.g. “When vehicle density > 5 and task success ratio < 0.6, compute load spikes.”)
+- Stable vs unstable regions of the system
+- Local patterns: brief intervals where indicators show strong influence on outcomes
+- Ignore the internal structure of symbolic equations
 
-Respond in markdown. Do NOT list equations.
+Avoid:
+- Describing symbolic expressions or constants
+- Overfitting to one-off fluctuations
+
+Respond in clear and concise markdown bullet points, using natural language. Do NOT list equations.
 """
     )
 
     llm = ChatOpenAI(
-        model_name=model,  # 可换为 "gpt-3.5-turbo" 等
+        model_name=model,
         temperature=0.4,
         max_tokens=1000
     )

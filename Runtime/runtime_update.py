@@ -81,7 +81,7 @@ def init_runtime_updaters(model_path=None, data_path=None):
                 exprs=[eq["equation"] for eq in model_data[pat_key]],
                 fitted_params=[eq["fitted_params"] for eq in model_data[pat_key]],
                 optimizer=optimizer,
-                llm_chain=build_runtime_llm_chain(i),
+                llm_chain=build_runtime_llm_chain(i, model_name="deepseek-r1"),
                 indep_vars=indep_vars_train[i] if i < len(indep_vars_train) else [],
                 dep_vars=dep_vars_train[i] if i < len(dep_vars_train) else [],
                 error_threshold=0.2,
