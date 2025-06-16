@@ -59,13 +59,13 @@ if junctions:
         data_collector.area_specific_data[f'junction_{i}'] = area_bounds
 
 formula_json_paths = [
-    # os.path.join(os.path.dirname(__file__), '../output/runtime/final_formulas.json'),
-    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run1.json'),
-    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run2.json'),
-    os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run3.json')
+    os.path.join(os.path.dirname(__file__), '../output/runtime/final_formulas_ds.json'),
+    # os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run1.json'),
+    # os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run2.json'),
+    # os.path.join(os.path.dirname(__file__), '../../Prediction/results/train/run3.json')
 ]
-output_json_path = os.path.join(os.path.dirname(__file__), '../output/prediction/all_runs_nmae.json')
-output_image_path = os.path.join(os.path.dirname(__file__), '../output/prediction')
+output_json_path = os.path.join(os.path.dirname(__file__), '../output/prediction/all_runs_nmae_ds.json')
+output_image_path = os.path.join(os.path.dirname(__file__), '../output/runtime')
 os.makedirs(os.path.dirname(output_json_path), exist_ok=True)
 
 # 模拟执行

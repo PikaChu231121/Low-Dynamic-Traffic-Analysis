@@ -450,7 +450,7 @@ class DataCollector:
                 run_result.append(pattern_results)
             # 调整布局，留出顶部空间以显示标题
             plt.tight_layout(rect=[0, 0, 1, 0.93])
-            plt.suptitle(f'Run {run_idx+1} - Prediction vs Actual', y=1.00)
+            plt.suptitle(f'Prediction vs Actual', y=1.00)
             if output_image_path:
                 plt.savefig(os.path.join(output_image_path, f'run{run_idx+1}_prediction.png'), dpi=300, bbox_inches='tight')
             plt.show()
