@@ -1,49 +1,33 @@
 # Rule Summary for Pattern 1
 
-### High-Level Behavioral Rules and Observations
+### Behavioral Rules and Indicator-Outcome Relationships  
 
-#### Key Rules and Patterns
-1. **Vehicle Density (x1):**
-   - The model consistently uses the logarithm of the current vehicle density (`log(x1+1)`) as a factor in predicting the next-slot average V2U rate.
-   - As vehicle density (`x1`) increases, the predicted V2U rate tends to increase. This suggests a positive correlation between vehicle density and the next-slot average V2U rate.
+#### **General Trends**  
+- **Vehicle Density (x1) Dominance**: Higher vehicle density consistently correlates with higher predicted V2U rates (y_pred), though actual outcomes (y_true) often stabilize or decline at very high densities (>5).  
+- **Compute Load (x3) Sensitivity**: Low compute load (x3 < 0.01) often leads to large prediction errors (MAE spikes), suggesting the model struggles with low-load scenarios. Moderate compute loads (0.01–0.015) align better with predictions.  
+- **UAV Density (x2) Insensitivity**: Despite being an input, UAV density shows minimal direct impact on outcomes, as it remains constant across all logs.  
 
-### Threshold Effects
-- **Current UAV Density (`x2`)**: 
-  - The UAV density appears to have a significant impact on the predicted V2U rate, often being multiplied by a constant factor (`c[0]`) and combined with other terms. The effect of UAV density seems to be more pronounced when combined with other factors like the square root of `x2` or in conjunction with `x1` and `x3`.
-  
-- **Current Average Compute Load (`x3`)**: 
-  - The average compute load (`x3`) is consistently subtracted from the equation, often in a squared form (`x3**2`) or as a division term (`x3/(x1+1)`). This suggests that higher compute loads tend to decrease the predicted V2U rate.
-  
-### Threshold Effects
-- **Low Vehicle Density (`x1 < 1`)**:
-  - In the initial logs, where `x1` is relatively low (below 1.5), the model consistently overestimates the V2U rate, as seen by high MAE values.
-  
-- **High Vehicle Density (`x1 > 3`)**:
-  - As vehicle density increases beyond 3, the model's performance worsens, indicated by higher MAE and NMAE values. This suggests that the model struggles to accurately predict the V2U rate when vehicle density is high.
-  
-### Model Performance
-- **Performance Degradation**: 
-  - The model's performance generally worsens (higher MAE and NMAE) as the vehicle density (`x1`) increases, particularly when `x1` exceeds approximately 3.0. 
-  - The prediction error also tends to increase with higher values of `x3`, especially when combined with higher vehicle densities.
+#### **Threshold-Based Triggers**  
+- **Low Vehicle Density (x1 < 1.5)**: Predictions are highly unreliable (MAE up to 2.1), especially when compute load is near zero. Actual V2U rates (y_true) are often zero here.  
+- **Moderate Vehicle Density (1.5 < x1 < 4)**: System stabilizes—predictions align closely with outcomes (low MAE, NMAE < 0.5). Compute load variations have less impact.  
+- **High Vehicle Density (x1 > 4)**: Predictions overshoot actual V2U rates (y_pred > y_true), with errors escalating (MAE up to 1.5). Compute load spikes (>0.01) exacerbate overestimation.  
 
-### Indicator Effects on Output
-- **Vehicle Density (`x1`)**: 
-  - The logarithm of vehicle density is consistently used in the models, indicating its importance. It suggests that increases in vehicle density have a diminishing return effect on the V2U rate.
-  
-- **UAV Density (`x2`)**:
-  - The UAV density is a significant factor, often appearing in the form of a linear or square root term, indicating that it has a strong influence on the V2U rate. Higher UAV density generally leads to an increased V2U rate.
-  
-- **Current Average Compute Load (`x3`)**:
-  - The compute load appears as a negative factor in the equations, either as `-c[1]*x3` or `-c[1]*x3**2`, suggesting that higher compute loads reduce the V2U rate. In some cases, the model considers the interaction between `x3` and other variables, such as `x3**2` and `x3/(x1+1)`, indicating a more complex relationship.
+#### **Stable vs. Unstable Regions**  
+- **Stable**: Vehicle density between 1.5–4, compute load 0.005–0.01. Predictions are accurate (MAE < 0.2).  
+- **Unstable**:  
+  - Very low vehicle density (x1 < 1) or compute load (x3 ≈ 0).  
+  - Very high vehicle density (x1 > 5), where predictions diverge sharply from reality.  
 
-### Model Performance
-- The model's performance, as indicated by MAE and NMAE, generally worsens with higher vehicle density (`x1`). 
-- The prediction error is particularly high when `x1` exceeds 3.0, suggesting that the model may not be capturing the dynamics of the system well at higher vehicle densities.
-- The model also shows increased error when the current average compute load (`x3`) is relatively high, indicating that it may struggle with accurately predicting V2U rates under high computational load conditions.
+#### **Local Patterns**  
+- **Compute Load Swings**: Sudden drops in compute load (e.g., x3 → 0) cause wild prediction swings (e.g., logs 5, 30–32).  
+- **Mid-Range x1 (2–3)**: Small compute load changes (x3 ± 0.005) have negligible impact—system is robust here.  
+- **High x1 with Low x3**: Predictions spike unrealistically (e.g., log 33: x1=5.18, x3=0.018 → y_pred=3.25 vs. y_true=1.99).  
 
-### Overall Insights
-- **Logarithmic Dependence on Vehicle Density**: The model consistently uses a logarithmic transformation of vehicle density, indicating a non-linear relationship where increases in vehicle density have diminishing effects on the V2U rate.
-- **Importance of UAV Density**: The UAV density is a significant factor, often appearing in the model as a multiplier, suggesting a direct relationship with the V2U rate.
-- **Compute Load Impact**: The current average compute load is often included as a negative term, either as a linear or squared term, indicating that higher compute loads generally decrease the V2U rate.
-- **Complex Interactions**: As vehicle density increases, the model incorporates more complex interactions, such as combinations of `x1`, `x2`, and `x3`, to better capture the dynamics affecting the V2U rate.
-- **Decreasing Accuracy with Higher Densities**: The model's prediction error tends to increase with higher vehicle densities, indicating a potential
+#### **Error Patterns**  
+- **Normalized Error (NMAE)**: Explodes in low-load scenarios (NMAE > 5 common when x3 < 0.005), indicating poor model calibration for edge cases.  
+- **Overconfidence in High x1**: Model consistently overestimates V2U rates at high vehicle density, regardless of equation complexity.  
+
+### Key Takeaways  
+- **Vehicle density is the primary driver** of V2U rate predictions, but the relationship becomes non-linear and unreliable at extremes.  
+- **Compute load is a secondary modulator**, with low values destabilizing predictions and moderate values improving accuracy.  
+- **The system is most reliable** in moderate vehicle density and compute load ranges—outside these bounds, predictions degrade significantly.

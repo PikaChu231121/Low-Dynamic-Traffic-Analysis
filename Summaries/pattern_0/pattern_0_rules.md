@@ -1,47 +1,41 @@
 # Rule Summary for Pattern 0
 
-# Summary of High-Level Behavioral Rules
+### Behavioral Rules and Indicator-Outcome Relationships  
 
-## Key Rules and Threshold Effects
+#### **General Trends**  
+- **Task Success Ratio (x1)**: Higher values (≥0.93) often correlate with stable or slightly decreasing compute load, but sudden drops in load (e.g., to 0) can occur unpredictably even with high success rates.  
+- **Vehicle Density (x2)**:  
+  - Low density (<1.5): Compute load remains low (≤0.015) unless V2U density (x3) is nonzero.  
+  - High density (>5): Compute load becomes more volatile, with occasional spikes (e.g., 0.018) despite high task success ratios.  
+- **V2U Density (x3)**:  
+  - Zero values: Compute load tends to stay low or decay.  
+  - Nonzero values (>1.5): Often precede moderate compute load (0.005–0.012), but influence diminishes if x3 fluctuates sharply.  
 
-1. **Impact of Task Success Ratio (x1):**
-   - Higher values of `x1` (task success ratio) generally correlate with higher predicted compute loads. This suggests that as the task success ratio increases, the system anticipates a higher compute load in the next slot.
+#### **Threshold-Based Triggers**  
+- **Compute Load Spikes**: Occur when:  
+  - *x3 suddenly rises* (e.g., from 0 to >2) *and* x4 (current load) is near zero (e.g., logs 33, 43).  
+  - *x2 > 5 and x1 drops below 0.94* (e.g., log 45: load spikes to 0.013 despite x1=0.943).  
+- **Load Collapses**: Happen when:  
+  - *x3 drops below 1.5* after sustained high values, *and* x4 is already low (e.g., logs 15–17).  
 
-2. **Influence of Vehicle Density (x2):**
-   - The vehicle density (`x2`) is often used in logarithmic form in the equations, indicating a non-linear relationship. Higher vehicle densities tend to increase the predicted compute load, especially when combined with other factors like task success ratio.
+#### **Stable vs. Unstable Regions**  
+- **Stable**:  
+  - *Low x2 (<2) + low x3 (≈0)*: Predictable low load (≤0.01).  
+  - *High x1 (>0.95) + moderate x3 (1.5–2.5)*: Load fluctuates mildly (0.005–0.01).  
+- **Unstable**:  
+  - *High x2 (>5) + fluctuating x3*: Load exhibits erratic spikes/drops (e.g., logs 33–49).  
+  - *x4 near zero*: Next-slot load is prone to abrupt changes (e.g., logs 5, 15).  
 
-3. **Role of V2U Density (x3):**
-   - The V2U density (`x3`) significantly affects the predicted compute load when it is non-zero. Higher values of `x3` tend to increase the predicted compute load, indicating that more vehicle-to-UAV interactions lead to higher computational demands.
+#### **Local Patterns**  
+- **Short-Term Influence of x3**:  
+  - Rapid increases in x3 (e.g., from 0 to 2+ within 1–2 slots) often lead to delayed load spikes (1–2 slots later).  
+- **Hysteresis Effect**:  
+  - After a spike (e.g., x4=0.018), load tends to decay gradually even if x3 remains high (e.g., logs 33–35).  
 
-4. **Current and Previous Compute Load (x4 and x5):**
-   - The current (`x4`) and previous (`x5`) compute loads are consistently used across equations, suggesting their critical role in predicting future loads. The model often predicts the next compute load based on a weighted combination of these two indicators.
+#### **Anomalies**  
+- **False Predictions**:  
+  - When x4=0, predictions often overestimate next-slot load (e.g., logs 5, 16, 19).  
+  - High x1 (>0.95) sometimes fails to prevent load spikes if x2 and x3 are both elevated (e.g., log 33).  
 
-## Temporal Trends
-
-- **Moving Averages:**
-  - The use of moving averages in some equations indicates that the model considers temporal trends and smooths out short-term fluctuations to predict the next compute load more accurately.
-
-- **Lag Effects:**
-  - The presence of previous-slot compute load (`x5`) in the equations highlights the model's reliance on temporal dependencies. This suggests that recent history is a strong predictor of immediate future states.
-
-## Model Performance
-
-- **Worsening Performance:**
-  - The model's performance tends to worsen (higher MAE and NMAE) when there are sudden changes or spikes in the input indicators, particularly when `x3` is zero or very low, suggesting that the model struggles with abrupt changes in V2U density.
-  - High prediction errors are also observed when the task success ratio (`x1`) is high, but the compute load is expected to be low. This indicates potential overfitting or a lack of sufficient data to generalize well in these scenarios.
-
-## Indicator Effects on Output
-
-- **Task Success Ratio (x1):**
-  - A higher task success ratio generally leads to an increase in predicted compute load, indicating that successful task completions drive up computational demand.
-
-- **Vehicle Density (x2):**
-  - Vehicle density has a logarithmic effect, suggesting diminishing returns on its impact on compute load as density increases.
-
-- **V2U Density (x3):**
-  - The presence of V2U density significantly increases the predicted compute load, highlighting the importance of vehicle-to-UAV interactions in computational demand.
-
-- **Compute Loads (x4 and x5):**
-  - Current and previous compute loads are strong predictors of future load, with their effects being additive in nature. This indicates a persistent and cumulative effect of computational demands over time.
-
-Overall, the model captures complex interactions between the indicators, with particular emphasis on recent compute loads and vehicle-to-UAV interactions. The performance is generally stable but can degrade with abrupt changes in key indicators.
+### Summary  
+The system is most stable under low vehicle/V2U densities but becomes volatile when either density exceeds moderate thresholds. V2U density acts as an amplifier for compute load, while vehicle density exacerbates unpredictability at high levels. Task success ratio alone is insufficient to prevent load spikes when other indicators are unstable.

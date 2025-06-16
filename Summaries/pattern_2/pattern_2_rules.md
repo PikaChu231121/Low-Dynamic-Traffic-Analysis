@@ -1,40 +1,40 @@
 # Rule Summary for Pattern 2
 
-## Summary of Behavioral Rules and Patterns
+### Behavioral Rules and Indicator-Outcome Relationships  
 
-### Causal and Threshold Rules
+#### **General Trends**  
+- **Task success ratio (y)** is generally high (0.8–0.96), with minor fluctuations tied to input indicators.  
+- **V2U rate (x1)** and **V2I rate (x2)** show stronger influence on outcomes than **compute load (x3)**, especially at higher values.  
 
-1. **Impact of V2U Rate (x1):**
-   - A higher V2U rate generally correlates with a higher predicted task success ratio. This is evident in cases where `x1` is significantly greater than zero, leading to better predictions.
-   - When `x1` is low or zero, the model tends to rely more on other indicators like compute load (x3), which can lead to increased prediction errors.
+#### **Causal Patterns**  
+- **High V2U/V2I rates correlate with higher task success**:  
+  - When `x1 > 1.5` and `x2 > 0.2`, `y` consistently exceeds 0.9.  
+  - Extremely high `x2` (e.g., >3.5) sometimes leads to slight saturation or instability in predictions (e.g., overprediction to `y=1.0`).  
+- **Compute load (x3) has nonlinear effects**:  
+  - Low-to-moderate `x3` (0–0.01) has negligible impact on `y`.  
+  - Very low `x3` (near 0) combined with high `x1/x2` can trigger overprediction (e.g., `y_pred=1.0`), suggesting a system blind spot.  
 
-2. **Effect of Compute Load (x3):**
-   - A higher compute load tends to decrease the predicted task success ratio. This is particularly noticeable when `x3` is non-zero, and the model equations incorporate terms that subtract or logarithmically transform `x3`.
-   - There is a threshold effect where low values of `x3` (close to zero) are associated with higher task success ratios, but as `x3` increases, the success ratio tends to decrease.
+#### **Threshold-Based Triggers**  
+- **Stable region**: `x1 > 1.5` and `x2 > 0.5` → `y` stabilizes around 0.92–0.95.  
+- **Unstable region**:  
+  - When `x3 ≈ 0` and `x1/x2` are high, predictions may spike to `y=1.0` (likely due to division-by-zero-like effects in the model).  
+  - Low `x1/x2` (near 0) with nonzero `x3` leads to lower `y` (0.8–0.85).  
 
-3. **Influence of V2I Rate (x2):**
-   - The V2I rate appears to have a moderating effect. Higher values of `x2` are associated with more accurate predictions, suggesting that it may stabilize or enhance the impact of other indicators.
+#### **Local Patterns**  
+- **V2U rate (x1) dominates at mid-range values**:  
+  - For `x1 ≈ 2.0–2.5`, even small increases in `x1` boost `y` (e.g., entries 5–11 show steady rise).  
+- **V2I rate (x2) gains influence at extremes**:  
+  - When `x2 > 3.0`, its impact on `y` becomes less predictable (e.g., entries 27–32 show oscillation despite high `x2`).  
 
-### Temporal Trends
+#### **System Stability**  
+- **Most stable predictions**: When `x1 > 1.0`, `x2 > 1.0`, and `x3 > 0.005` → `MAE` is consistently low (<0.01).  
+- **Least stable predictions**: When `x3 ≈ 0` → `MAE` spikes (e.g., entries 15–19, 29, 32).  
 
-- **Model Behavior Over Time:**
-  - As the dataset progresses, there is a noticeable shift in the equations used, indicating adaptation to changing conditions or inputs. For instance, early entries use simpler linear models, while later entries incorporate more complex expressions involving logarithms and exponentials.
-  - Over time, the model appears to place more emphasis on `x1` and `x2`, possibly due to their stabilizing effects compared to the more volatile `x3`.
+#### **Key Takeaways**  
+1. **V2U/V2I rates are primary drivers** of task success; compute load is secondary.  
+2. **Near-zero compute load destabilizes predictions**, likely due to model limitations.  
+3. **High V2I rates (>3.0) may indicate system saturation**, where further increases don’t improve outcomes.  
+4. **Optimal operating region**: Moderate-to-high `x1/x2` with nonzero `x3` ensures stable, high task success.  
 
-### Model Performance and Errors
-
-- **Performance Degradation:**
-  - The model's performance worsens when `x3` is high, leading to larger prediction errors. This suggests that the compute load is a critical factor that can negatively impact task success if not managed properly.
-  - High normalized mean absolute error (NMAE) values in later entries indicate that the model struggles with certain configurations, particularly when `x3` is substantial or when `x1` and `x2` are low.
-
-- **Error Patterns:**
-  - In scenarios with low `x1` and high `x3`, the model's predictions deviate more from the true values, indicating a need for improved handling of these conditions.
-  - The presence of exponential and logarithmic terms in later models suggests attempts to capture non-linear relationships, which may contribute to improved accuracy in some cases but also increase complexity and potential for error.
-
-### Indicator Effects on Output
-
-- **V2U Rate (x1):** Strong positive correlation with task success ratio. Higher `x1` generally leads to better outcomes.
-- **Compute Load (x3):** Negative correlation with task success ratio. Increased `x3` often results in decreased success, highlighting the importance of managing computational demands.
-- **V2I Rate (x2):** Acts as a stabilizing factor, with higher values supporting better predictions and potentially mitigating the adverse effects of high `x3`.
-
-Overall, the data suggests that effective management of V2U rates and compute loads is crucial for maintaining high task success ratios in vehicular-UAV collaborative systems. The model's ability to adapt to changing conditions and inputs is reflected in the evolving complexity of its predictive equations.
+---  
+*Note: All observations are based on empirical trends in the logs, ignoring model-specific equations.*

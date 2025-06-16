@@ -53,6 +53,7 @@ class FittingOptimizerAirFog:
         except Exception as e:
             print("Data column stack failed:", e)
             return []
+        
 
         # Parse expressions if in string form
         if isinstance(expressions, str):
@@ -65,6 +66,11 @@ class FittingOptimizerAirFog:
             # Get all used constant indices, e.g., [0, 1, 2]
             equation_indices = self.get_equation_indices(equation)
             num_constants = len(equation_indices)
+
+            # Check validity
+            initial_val = [1.0] * num_constants
+            if not self.is_valid_equation(equation, data, initial_val):
+                return []
             
             if num_constants == 0:
                 nmae = self.equation_error([], equation, data)
@@ -92,10 +98,10 @@ class FittingOptimizerAirFog:
                 print(f"[Warning] Invalid bounds for equation: {equation}, fallback to default")
                 bounds = [(-10.0, 10.0)] * num_constants
 
-            # Check validity
-            initial_val = [1.0] * num_constants
-            if not self.is_valid_equation(equation, data, initial_val):
-                continue
+            # # Check validity
+            # initial_val = [1.0] * num_constants
+            # if not self.is_valid_equation(equation, data, initial_val):
+            #     continue
 
             # Perform optimization
             try:
