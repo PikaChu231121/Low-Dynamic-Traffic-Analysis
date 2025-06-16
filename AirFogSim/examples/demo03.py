@@ -421,7 +421,7 @@ for pattern_id in range(3):
 # 保存最终公式到JSON文件
 output_dir = os.path.join(airfogsim_root, 'output/runtime')
 os.makedirs(output_dir, exist_ok=True)
-with open(os.path.join(output_dir, 'final_formulas_ds.json'), 'w') as f:
+with open(os.path.join(output_dir, 'final_formulas_gpt.json'), 'w') as f:
     json.dump(final_formulas, f, indent=2)
 print(f"最终公式已保存到 {os.path.join(output_dir, 'final_formulas.json')}")
 
@@ -485,7 +485,7 @@ for pattern_id in range(3):
         plt.tight_layout()
         
         # 保存图片
-        plt.savefig(os.path.join(output_dir, f'pattern_{pattern_id+1}_prediction_scatter_ds.png'))
+        plt.savefig(os.path.join(output_dir, f'pattern_{pattern_id+1}_prediction_scatter_gpt.png'))
         plt.close()
 
 # 保存预测结果
@@ -501,7 +501,7 @@ results = {
 }
 
 import json
-with open(os.path.join(output_dir, 'runtime_predictions_ds.json'), 'w') as f:
+with open(os.path.join(output_dir, 'runtime_predictions_gpt.json'), 'w') as f:
     json.dump(results, f, indent=2)
 
 print("\nSimulation done.")
