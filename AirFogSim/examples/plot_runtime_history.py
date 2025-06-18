@@ -16,9 +16,9 @@ INDEPVARMAP = [
 base_project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 airfogsim_output_path = os.path.join(base_project_dir, 'AirFogSim/output')
 runtime_output_path = os.path.join(airfogsim_output_path, 'runtime')
-json_path = os.path.join(runtime_output_path, 'runtime_predictions.json')
+json_path = os.path.join(runtime_output_path, 'runtime_predictions_ds.json')
 csv_path = os.path.join(airfogsim_output_path, 'global_data.csv')
-plot_output_dir = os.path.join(runtime_output_path, 'formula_history_plots')
+plot_output_dir = os.path.join(runtime_output_path, 'formula_history_plots_ds')
 
 os.makedirs(plot_output_dir, exist_ok=True)
 
